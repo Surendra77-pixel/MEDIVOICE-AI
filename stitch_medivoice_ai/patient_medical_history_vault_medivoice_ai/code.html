@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Medical Vault | MediVoice AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#005f71",
+                        "surface-bright": "#f8f9fb",
+                        "secondary": "#00687b",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed": "#001f27",
+                        "outline-variant": "#c3c6d6",
+                        "on-tertiary-container": "#ffc6b2",
+                        "primary-container": "#0052cc",
+                        "tertiary-container": "#a33500",
+                        "on-surface-variant": "#434654",
+                        "on-error-container": "#93000a",
+                        "surface-container": "#edeef0",
+                        "outline": "#737685",
+                        "on-secondary-fixed-variant": "#004e5d",
+                        "on-primary-fixed": "#001848",
+                        "inverse-surface": "#2e3132",
+                        "background": "#f8f9fb",
+                        "on-error": "#ffffff",
+                        "tertiary": "#7b2600",
+                        "surface-variant": "#e1e2e4",
+                        "on-tertiary-fixed": "#380d00",
+                        "on-secondary": "#ffffff",
+                        "on-primary-container": "#c4d2ff",
+                        "surface-container-low": "#f3f4f6",
+                        "secondary-fixed-dim": "#48d7f9",
+                        "on-primary-fixed-variant": "#0040a2",
+                        "surface-dim": "#d9dadc",
+                        "primary-fixed": "#dae2ff",
+                        "surface-container-high": "#e7e8ea",
+                        "primary-fixed-dim": "#b2c5ff",
+                        "tertiary-fixed": "#ffdbcf",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-primary": "#ffffff",
+                        "inverse-primary": "#b2c5ff",
+                        "surface": "#f8f9fb",
+                        "on-tertiary": "#ffffff",
+                        "on-background": "#191c1e",
+                        "surface-container-highest": "#e1e2e4",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed-dim": "#ffb59b",
+                        "on-tertiary-fixed-variant": "#812800",
+                        "surface-tint": "#0c56d0",
+                        "secondary-fixed": "#afecff",
+                        "secondary-container": "#50dcff",
+                        "primary": "#003d9b",
+                        "error": "#ba1a1a",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "base": "8px",
+                        "gutter": "24px",
+                        "xl": "80px",
+                        "lg": "48px",
+                        "xs": "4px",
+                        "sm": "12px",
+                        "md": "24px",
+                        "container-max": "1440px"
+                    },
+                    "fontFamily": {
+                        "label": ["Manrope"],
+                        "h3": ["Space Grotesk"],
+                        "body-md": ["Manrope"],
+                        "h1": ["Space Grotesk"],
+                        "h2": ["Space Grotesk"],
+                        "body-sm": ["Manrope"],
+                        "body-lg": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "label": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                        "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(225, 228, 232, 0.5);
+        }
+        .ai-glow {
+            border: 1px solid rgba(0, 82, 204, 0.15);
+            box-shadow: 0 0 20px rgba(0, 82, 204, 0.05);
+        }
+        .timeline-line {
+            width: 2px;
+            background: repeating-linear-gradient(to bottom, #c3c6d6 0, #c3c6d6 4px, transparent 4px, transparent 8px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md">
+<!-- Shared SideNavBar -->
+<aside class="h-screen w-72 fixed left-0 top-0 flex flex-col bg-surface-container-lowest border-r border-outline-variant shadow-sm z-50">
+<div class="flex flex-col h-full py-md px-sm">
+<div class="px-sm mb-lg">
+<div class="flex items-center gap-sm">
+<img alt="MediVoice AI Clinical Logo" class="w-10 h-10 rounded-lg" data-alt="A professional medical technology logo featuring a stylized blue pulse wave integrated with a digital brain silhouette. The aesthetic is clean, corporate, and clinical, utilizing a deep primary blue against a bright white background to evoke trust and high-tech intelligence in a healthcare context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuArvI98ll_0VHYx-vPDzdEg-qvJWXTEobRi_Cq2mdsEkL0emyBF8cc8-QBHBw5hhomQZYqN_MG2vFhsG4Zyz5vf0IgHF70yTFT3NAnj1F7IYzOGfCqh8p_wB8AW9AGIgAygS1x0oc1ZX6jXkb9tJ-1qMn9pla3JC6YrKcwed8Sq5Iuej3O2EZWmbwbGyucDPdTu_awjEYyQghJiJFB94uBNqrksmXjgZ62cuc3_o8paRZLEdCkxuaOWNUEevshQGx2SfgkXpjmo4nE"/>
+<div>
+<h1 class="font-h2 text-[20px] font-bold text-primary">MediVoice AI</h1>
+<p class="font-label text-[10px] text-outline uppercase tracking-widest">Clinical Intelligence</p>
+</div>
+</div>
+</div>
+<nav class="flex-1 space-y-xs">
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label text-label tracking-wider uppercase">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-primary font-bold bg-primary-container/10 border-r-4 border-primary transition-all duration-200" href="#">
+<span class="material-symbols-outlined">folder_shared</span>
+<span class="font-label text-label tracking-wider uppercase">Medical Vault</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-label text-label tracking-wider uppercase">AI Insights</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">badge</span>
+<span class="font-label text-label tracking-wider uppercase">Patient Portal</span>
+</a>
+<a class="flex items-center gap-sm px-sm py-sm rounded-lg text-on-surface-variant font-medium hover:bg-surface-container-low transition-all duration-200" href="#">
+<span class="material-symbols-outlined">security</span>
+<span class="font-label text-label tracking-wider uppercase">Vault Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-sm">
+<button class="w-full bg-primary text-white py-sm rounded-lg font-bold flex items-center justify-center gap-xs hover:opacity-90 transition-all">
+<span class="material-symbols-outlined">add</span>
+<span>Add New Record</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Shared TopNavBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-288px)] z-40 bg-surface/80 backdrop-blur-md border-b border-outline-variant/50 shadow-sm h-xl px-lg flex justify-between items-center">
+<div class="flex items-center gap-md flex-1">
+<h2 class="font-h3 text-h3 font-bold text-on-surface shrink-0">Medical Vault</h2>
+<div class="max-w-md w-full relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant rounded-full focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-body-sm" placeholder="Search clinical records, notes, or doctors..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-sm">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">verified_user</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+</div>
+<div class="h-8 w-px bg-outline-variant/50 mx-sm"></div>
+<div class="flex items-center gap-sm">
+<div class="text-right">
+<p class="text-body-sm font-bold text-on-surface">Dr. Marcus Thorne</p>
+<p class="text-[10px] text-outline font-label uppercase">Chief Medical Officer</p>
+</div>
+<img alt="Chief Medical Officer Profile" class="w-10 h-10 rounded-full border-2 border-primary/20" data-alt="A close-up portrait of a professional male doctor in his late 40s wearing a clean white clinical coat and a stethoscope. The background is a blurred, high-end medical facility with soft blue and white tones. The lighting is natural and flattering, emphasizing a trustworthy and authoritative presence in a modern healthcare environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBn-oLzEOcBr4eSL5HJQpZ8NeYicY7rsNejgZjws_EIhW52UU0y2WeqhNgEbGP6-yyZvTun0U4LbfNemvW3bQU2UgyPh4oyAOg9yazmWZZ3QIeUYWTH2CWPH5RYxqzSmBoZ3Siz1GnttECmdb76f5dwz-18nDCGPCrt8xWjiKaYeHICtMFH-XqBvbNUopQW2gcvk1l5cAm-FC9UO8tslE-Mwcf3oPR3nry6f5tnGzHDjzOa_lT3LoaHHmuJIAKwZIu32aWvoPz-2Fo"/>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-72 pt-xl p-lg max-w-container-max mx-auto">
+<!-- Header & Filters Section -->
+<section class="mb-lg flex flex-col md:flex-row md:items-end justify-between gap-md">
+<div class="space-y-xs">
+<div class="flex items-center gap-sm">
+<span class="px-3 py-1 bg-secondary-container/20 text-on-secondary-container text-[10px] font-bold rounded-full flex items-center gap-1 uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]">encrypted</span>
+                        Secure Vault
+                    </span>
+<span class="text-outline text-body-sm">•</span>
+<span class="text-outline text-body-sm font-medium">HIPAA Compliant Data Storage</span>
+</div>
+<h1 class="font-h1 text-h1 text-on-surface">Consultation History</h1>
+<p class="text-on-surface-variant text-body-lg max-w-2xl">Access AI-transcribed notes and clinical assessments from past patient interactions.</p>
+</div>
+<div class="flex items-center gap-sm">
+<div class="bg-surface-container-lowest border border-outline-variant rounded-lg p-1 flex">
+<button class="px-4 py-2 text-body-sm font-bold bg-primary text-white rounded-md transition-all">Last 3 months</button>
+<button class="px-4 py-2 text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-all">Year to Date</button>
+<button class="px-4 py-2 text-body-sm font-medium text-on-surface-variant hover:bg-surface-container-low transition-all">Custom</button>
+</div>
+<button class="flex items-center gap-xs px-4 py-3 border border-outline-variant rounded-lg hover:bg-surface-container-low transition-all font-bold text-body-sm">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+                    More Filters
+                </button>
+</div>
+</section>
+<!-- Timeline Section -->
+<section class="relative pl-8 md:pl-16">
+<!-- Continuous Timeline Line -->
+<div class="absolute left-4 md:left-8 top-4 bottom-4 timeline-line"></div>
+<div class="space-y-lg">
+<!-- Timeline Entry 1 -->
+<div class="relative group">
+<!-- Marker -->
+<div class="absolute -left-4 md:-left-8 top-6 w-8 md:w-16 h-[2px] bg-outline-variant"></div>
+<div class="absolute -left-[22px] md:-left-[38px] top-4 w-4 h-4 rounded-full bg-primary border-4 border-white shadow-sm ring-4 ring-primary-container/10"></div>
+<div class="glass-card ai-glow rounded-xl p-md shadow-sm transition-all hover:shadow-md">
+<div class="flex flex-col md:flex-row gap-md justify-between items-start">
+<div class="flex-1 space-y-sm">
+<div class="flex items-center gap-md">
+<div class="text-center bg-surface-container-high px-sm py-xs rounded-lg min-w-[70px]">
+<p class="text-[10px] font-label uppercase text-outline">Oct</p>
+<p class="text-h3 font-bold text-on-surface">24</p>
+<p class="text-[10px] font-label text-outline">2023</p>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Post-Operative Follow-up</h3>
+<div class="flex flex-wrap gap-sm mt-xs">
+<span class="flex items-center gap-xs text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">medical_information</span>
+                                                Dr. Marcus Thorne
+                                            </span>
+<span class="text-outline/30">•</span>
+<span class="flex items-center gap-xs text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">neurology</span>
+                                                Neurology Dept
+                                            </span>
+</div>
+</div>
+</div>
+<p class="text-on-surface-variant text-body-md leading-relaxed">Patient reports minor localized discomfort but significant improvement in cognitive recall tasks. AI analysis of speech patterns indicates 12% improvement in lexical density since last session.</p>
+</div>
+<div class="flex flex-col items-end gap-sm">
+<span class="bg-primary-container/10 text-primary px-3 py-1 rounded-full text-[12px] font-bold border border-primary/20">AI Summarized</span>
+<button class="text-primary font-bold flex items-center gap-xs hover:underline">
+                                    Expand Details
+                                    <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</div>
+<!-- Expanded Section (Visible) -->
+<div class="mt-lg pt-lg border-t border-outline-variant/30 grid grid-cols-1 lg:grid-cols-3 gap-lg">
+<div class="lg:col-span-2 space-y-md">
+<div class="bg-surface-container-lowest/50 p-md rounded-xl border border-outline-variant/50">
+<h4 class="font-label text-label uppercase text-primary mb-sm">AI-Generated SOAP Note</h4>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-md">
+<div>
+<p class="text-[12px] font-bold text-on-surface uppercase mb-xs">Subjective</p>
+<p class="text-body-sm text-on-surface-variant">Occasional mild headaches in the morning. Improved sleep cycles reported (7-8 hrs).</p>
+</div>
+<div>
+<p class="text-[12px] font-bold text-on-surface uppercase mb-xs">Objective</p>
+<p class="text-body-sm text-on-surface-variant">Vital signs normal. BP: 120/80. Clear pupillary response. Motor coordination 5/5.</p>
+</div>
+<div>
+<p class="text-[12px] font-bold text-on-surface uppercase mb-xs">Assessment</p>
+<p class="text-body-sm text-on-surface-variant">Positive trajectory post-resection. No signs of neurological deficit or relapse.</p>
+</div>
+<div>
+<p class="text-[12px] font-bold text-on-surface uppercase mb-xs">Plan</p>
+<p class="text-body-sm text-on-surface-variant">Continue physiotherapy. Next MRI scheduled for Jan 2024. Monitor migraine frequency.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-md">
+<div class="bg-surface-container-lowest/50 p-md rounded-xl border border-outline-variant/50">
+<h4 class="font-label text-label uppercase text-primary mb-sm">Prescribed Medications</h4>
+<ul class="space-y-sm">
+<li class="flex justify-between items-center pb-2 border-b border-outline-variant/20">
+<span class="font-bold text-body-sm">Neurofen 400mg</span>
+<span class="text-body-sm text-outline">1x Daily</span>
+</li>
+<li class="flex justify-between items-center pb-2 border-b border-outline-variant/20">
+<span class="font-bold text-body-sm">Vit-B Complex</span>
+<span class="text-body-sm text-outline">2x Daily</span>
+</li>
+</ul>
+<button class="w-full mt-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface py-3 rounded-lg font-bold flex items-center justify-center gap-xs transition-all">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+                                        Download PDF Vault Record
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline Entry 2 -->
+<div class="relative group">
+<!-- Marker -->
+<div class="absolute -left-4 md:-left-8 top-6 w-8 md:w-16 h-[2px] bg-outline-variant"></div>
+<div class="absolute -left-[18px] md:-left-[34px] top-4 w-2 h-2 rounded-full bg-outline-variant border-2 border-white"></div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm transition-all hover:shadow-md">
+<div class="flex flex-col md:flex-row gap-md justify-between items-start">
+<div class="flex-1 space-y-sm">
+<div class="flex items-center gap-md">
+<div class="text-center bg-surface-container-low px-sm py-xs rounded-lg min-w-[70px]">
+<p class="text-[10px] font-label uppercase text-outline">Aug</p>
+<p class="text-h3 font-bold text-on-surface">12</p>
+<p class="text-[10px] font-label text-outline">2023</p>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Initial Diagnostic Assessment</h3>
+<div class="flex flex-wrap gap-sm mt-xs">
+<span class="flex items-center gap-xs text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">medical_information</span>
+                                                Dr. Sarah Jenkins
+                                            </span>
+<span class="text-outline/30">•</span>
+<span class="flex items-center gap-xs text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">radiology</span>
+                                                Radiology
+                                            </span>
+</div>
+</div>
+</div>
+<p class="text-on-surface-variant text-body-md leading-relaxed">Comprehensive review of MRI scans and patient history. Diagnostic focus on occipital lobe anomalies.</p>
+</div>
+<div class="flex flex-col items-end gap-sm">
+<button class="text-outline font-bold flex items-center gap-xs hover:text-primary transition-colors">
+                                    Expand Details
+                                    <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Timeline Entry 3 -->
+<div class="relative group">
+<!-- Marker -->
+<div class="absolute -left-4 md:-left-8 top-6 w-8 md:w-16 h-[2px] bg-outline-variant"></div>
+<div class="absolute -left-[18px] md:-left-[34px] top-4 w-2 h-2 rounded-full bg-outline-variant border-2 border-white"></div>
+<div class="bg-surface-container-lowest border border-outline-variant rounded-xl p-md shadow-sm transition-all hover:shadow-md">
+<div class="flex flex-col md:flex-row gap-md justify-between items-start">
+<div class="flex-1 space-y-sm">
+<div class="flex items-center gap-md">
+<div class="text-center bg-surface-container-low px-sm py-xs rounded-lg min-w-[70px]">
+<p class="text-[10px] font-label uppercase text-outline">Jun</p>
+<p class="text-h3 font-bold text-on-surface">05</p>
+<p class="text-[10px] font-label text-outline">2023</p>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Annual Wellness Screen</h3>
+<div class="flex flex-wrap gap-sm mt-xs">
+<span class="flex items-center gap-xs text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">medical_information</span>
+                                                Dr. Robert Chen
+                                            </span>
+<span class="text-outline/30">•</span>
+<span class="flex items-center gap-xs text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">health_and_safety</span>
+                                                General Medicine
+                                            </span>
+</div>
+</div>
+</div>
+<p class="text-on-surface-variant text-body-md leading-relaxed">Routine checkup. All vitals within normal parameters. Patient referred to Neurology for recurring migraines.</p>
+</div>
+<div class="flex flex-col items-end gap-sm">
+<button class="text-outline font-bold flex items-center gap-xs hover:text-primary transition-colors">
+                                    Expand Details
+                                    <span class="material-symbols-outlined">expand_more</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer / Data Info -->
+<footer class="mt-xl pt-lg border-t border-outline-variant/30 flex flex-col md:flex-row justify-between items-center gap-md text-outline">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-[20px]">verified</span>
+<span class="text-body-sm font-medium">All records are cryptographically signed and stored in compliance with SOC2 Type II standards.</span>
+</div>
+<div class="flex items-center gap-lg">
+<a class="text-body-sm hover:text-primary transition-colors" href="#">Request Full Data Export</a>
+<a class="text-body-sm hover:text-primary transition-colors" href="#">Audit Logs</a>
+</div>
+</footer>
+</main>
+<!-- FAB for quick action (Suppressed on detail view as per rules, but shown on vault home) -->
+<button class="fixed bottom-lg right-lg bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-105 transition-all z-50">
+<span class="material-symbols-outlined">upload_file</span>
+</button>
+</body></html>

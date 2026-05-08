@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MediVoice AI - Live Consultation Room</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed-variant": "#0040a2",
+                      "surface-dim": "#d9dadc",
+                      "surface": "#f8f9fb",
+                      "on-surface": "#191c1e",
+                      "on-secondary": "#ffffff",
+                      "primary-container": "#0052cc",
+                      "on-tertiary-fixed-variant": "#812800",
+                      "on-primary": "#ffffff",
+                      "secondary-fixed": "#afecff",
+                      "tertiary": "#7b2600",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-low": "#f3f4f6",
+                      "on-primary-container": "#c4d2ff",
+                      "inverse-on-surface": "#f0f1f3",
+                      "on-primary-fixed": "#001848",
+                      "primary-fixed": "#dae2ff",
+                      "on-tertiary": "#ffffff",
+                      "inverse-surface": "#2e3132",
+                      "primary": "#003d9b",
+                      "on-secondary-fixed": "#001f27",
+                      "on-secondary-fixed-variant": "#004e5d",
+                      "surface-container-high": "#e7e8ea",
+                      "inverse-primary": "#b2c5ff",
+                      "tertiary-fixed": "#ffdbcf",
+                      "surface-tint": "#0c56d0",
+                      "primary-fixed-dim": "#b2c5ff",
+                      "tertiary-fixed-dim": "#ffb59b",
+                      "secondary-fixed-dim": "#48d7f9",
+                      "surface-container": "#edeef0",
+                      "surface-bright": "#f8f9fb",
+                      "on-error": "#ffffff",
+                      "on-tertiary-container": "#ffc6b2",
+                      "on-secondary-container": "#005f71",
+                      "error-container": "#ffdad6",
+                      "error": "#ba1a1a",
+                      "surface-container-highest": "#e1e2e4",
+                      "secondary-container": "#50dcff",
+                      "on-surface-variant": "#434654",
+                      "on-tertiary-fixed": "#380d00",
+                      "on-error-container": "#93000a",
+                      "outline-variant": "#c3c6d6",
+                      "secondary": "#00687b",
+                      "outline": "#737685",
+                      "surface-variant": "#e1e2e4",
+                      "on-background": "#191c1e",
+                      "background": "#f8f9fb",
+                      "tertiary-container": "#a33500"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xs": "4px",
+                      "sm": "12px",
+                      "md": "24px",
+                      "lg": "48px",
+                      "container-max": "1440px",
+                      "gutter": "24px",
+                      "xl": "80px",
+                      "base": "8px"
+              },
+              "fontFamily": {
+                      "body-md": ["Manrope"],
+                      "h2": ["Space Grotesk"],
+                      "body-lg": ["Manrope"],
+                      "label": ["Manrope"],
+                      "h3": ["Space Grotesk"],
+                      "body-sm": ["Manrope"],
+                      "h1": ["Space Grotesk"]
+              },
+              "fontSize": {
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                      "h1": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(46, 49, 50, 0.8);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(115, 118, 133, 0.2);
+        }
+        .stt-feed::-webkit-scrollbar { width: 4px; }
+        .stt-feed::-webkit-scrollbar-thumb { background: #737685; border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-inverse-surface text-on-surface-variant font-body-md overflow-hidden h-screen flex flex-col">
+<!-- TopNavBar (Shared Component Identity) -->
+<header class="bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-md text-primary dark:text-primary-fixed-dim font-body-md text-body-md docked full-width top-0 border-b border-outline-variant dark:border-outline/20 shadow-sm dark:shadow-none flex justify-between items-center w-full px-md h-16 fixed top-0 z-50">
+<div class="flex items-center gap-md">
+<span class="font-h3 text-h3 font-bold text-primary dark:text-primary-fixed-dim">MediVoice AI</span>
+<div class="h-6 w-px bg-outline/20"></div>
+<div class="flex items-center gap-sm">
+<span class="text-on-surface dark:text-inverse-on-surface font-bold">Sarah Miller</span>
+<span class="bg-error/10 text-error px-sm py-xs rounded-full font-label text-[10px] border border-error/20 flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+                    HIGH RISK
+                </span>
+</div>
+</div>
+<div class="flex items-center gap-lg">
+<div class="flex items-center gap-sm font-bold text-primary dark:text-primary-fixed-dim">
+<span class="material-symbols-outlined text-primary">schedule</span>
+<span class="tabular-nums">00:15:24</span>
+</div>
+<div class="flex items-center gap-md">
+<span class="material-symbols-outlined cursor-pointer hover:bg-primary-container/10 p-2 rounded-full transition-colors">emergency</span>
+<span class="material-symbols-outlined cursor-pointer hover:bg-primary-container/10 p-2 rounded-full transition-colors">settings</span>
+<span class="material-symbols-outlined cursor-pointer hover:bg-primary-container/10 p-2 rounded-full transition-colors">account_circle</span>
+<button class="bg-error text-on-error px-md py-sm rounded-lg font-bold hover:opacity-90 active:scale-95 transition-all">
+                    End Session
+                </button>
+</div>
+</div>
+</header>
+<!-- SideNavBar (Shared Component Logic - Suppressed per transactional screen rule) -->
+<!-- Content starts below header -->
+<main class="flex-1 pt-16 pb-24 px-md grid grid-cols-12 gap-md h-full overflow-hidden">
+<!-- Left Column: AI SOAP Note Panel -->
+<aside class="col-span-3 flex flex-col gap-md py-md overflow-y-auto">
+<div class="flex items-center justify-between">
+<h2 class="font-h3 text-h3 text-inverse-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed-dim">clinical_notes</span>
+                    AI SOAP Note
+                </h2>
+<span class="bg-secondary/20 text-secondary-fixed-dim px-2 py-1 rounded font-label uppercase text-[10px] tracking-widest">Auto-Generating</span>
+</div>
+<div class="glass-panel rounded-xl p-md flex flex-col gap-sm">
+<div class="flex items-center gap-2 text-primary-fixed-dim font-bold border-b border-outline/10 pb-2">
+<span class="material-symbols-outlined text-sm">sentiment_dissatisfied</span>
+<span class="font-label">SUBJECTIVE</span>
+</div>
+<div class="text-body-sm text-surface-variant/80 italic space-y-2">
+<p>• Patient reports persistent headache for 3 days.</p>
+<p>• Describes pain as "throbbing" and "localized behind eyes".</p>
+<p>• Nausea noted since this morning.</p>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-md flex flex-col gap-sm">
+<div class="flex items-center gap-2 text-primary-fixed-dim font-bold border-b border-outline/10 pb-2">
+<span class="material-symbols-outlined text-sm">assignment_turned_in</span>
+<span class="font-label">OBJECTIVE</span>
+</div>
+<div class="text-body-sm text-surface-variant/80 space-y-3">
+<div class="flex items-center justify-between">
+<span>Fever:</span>
+<span class="text-error font-bold">101.2°F</span>
+</div>
+<div class="h-1 bg-outline/10 rounded-full overflow-hidden">
+<div class="h-full bg-error w-[85%]"></div>
+</div>
+<div class="flex items-center justify-between">
+<span>BP:</span>
+<span class="text-secondary-fixed-dim font-bold">138/88</span>
+</div>
+<div class="flex items-center justify-between">
+<span>O2 Sat:</span>
+<span class="text-secondary-fixed-dim font-bold">98%</span>
+</div>
+</div>
+</div>
+<div class="glass-panel rounded-xl p-md flex flex-col gap-sm opacity-50 border-dashed">
+<div class="flex items-center gap-2 text-on-surface-variant font-bold border-b border-outline/10 pb-2">
+<span class="material-symbols-outlined text-sm">analytics</span>
+<span class="font-label">ASSESSMENT</span>
+</div>
+<p class="text-body-sm italic">Waiting for more diagnostic input...</p>
+</div>
+</aside>
+<!-- Center Column: Split Video Feed -->
+<section class="col-span-6 flex flex-col gap-md py-md">
+<div class="flex-1 grid grid-rows-2 gap-md overflow-hidden">
+<!-- Patient Video -->
+<div class="relative group overflow-hidden rounded-2xl border-2 border-error/30 bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A focused high-fidelity cinematic close-up of a middle-aged woman looking concerned and touching her forehead during a medical video call. The background is a softly blurred modern home office with warm, natural lighting. The visual style is premium and high-trust, with a subtle blue tint in the shadows to maintain a professional clinical aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDkr0vUIUWW0W7vbfi0smCHlsCalSD8dQbCdos49ojgWopfiCkvBMhpzcOBV57MSIxqDlmuGQpkiUvQ29WRw7Lk68i4J9WcWPEq1gk7zKKWzWo5alNUpaNk-fAmpoVWjI_j-COdtz9bxeCBDzLopRGf-K4ZwjVojWOUSJB2Nq0ptmFvxExCGlkN6YwAhPu0oIRDlLBmOiR0eDCuSP20TNeyPyft73d3RNBIA4DBPCTu9cgR3yWPmlKNgyOCLAOoG4yqVZeWidMm3hA"/>
+<div class="absolute bottom-md left-md glass-panel px-md py-xs rounded-lg flex items-center gap-2">
+<div class="w-2 h-2 bg-error rounded-full animate-pulse"></div>
+<span class="text-inverse-on-surface font-bold text-body-sm">Sarah Miller (Patient)</span>
+</div>
+</div>
+<!-- Doctor Video -->
+<div class="relative group overflow-hidden rounded-2xl border border-outline/20 bg-surface-dim">
+<img class="w-full h-full object-cover" data-alt="A professional male doctor in his late 40s wearing a crisp white coat and a stethoscope, sitting in a high-tech medical office with digital screens in the background. The lighting is bright and professional, emphasizing a clean and authoritative atmosphere. The composition is a medium shot, conveying a sense of calm expertise and attentiveness during a telehealth session." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhcBlEGqKS09Bx5BGz9X7CuoMcJfK99Ejrh4bY0oDDrSXiq4q6tNqTASUqSkq4dcYL4OBG4gy7RILdPiGzReHvxHgEtRLWhupOtYsGRIbLHnfl1esw_3xYZfd-A26bWN6uYD_v9bAWTQ8yjuSN1u5Qvh6rjYyppfZf2V2zgCjdCLzRJJxJLKBYAfVlK4zLIXlWRIMTb9vcgo0MoMYpBWUfS3J4qIMsfjetr2S4BccbWZUi6qpD1dBX5VaHD3D8nd1Y4iE_OiW9l_E"/>
+<div class="absolute bottom-md left-md glass-panel px-md py-xs rounded-lg flex items-center gap-2">
+<div class="w-2 h-2 bg-primary-container rounded-full"></div>
+<span class="text-inverse-on-surface font-bold text-body-sm">Dr. Sterling</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Live STT Translation Panel -->
+<aside class="col-span-3 flex flex-col gap-md py-md overflow-hidden">
+<div class="flex items-center justify-between">
+<h2 class="font-h3 text-h3 text-inverse-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim">translate</span>
+                    Live STT
+                </h2>
+<div class="flex gap-1">
+<div class="w-1.5 h-1.5 bg-primary-container rounded-full"></div>
+<div class="w-1.5 h-1.5 bg-primary-container rounded-full opacity-50"></div>
+<div class="w-1.5 h-1.5 bg-primary-container rounded-full opacity-20"></div>
+</div>
+</div>
+<div class="glass-panel flex-1 rounded-xl p-md flex flex-col gap-md overflow-y-auto stt-feed">
+<!-- Translation Block -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center opacity-60">
+<span class="font-label text-[10px]">PATIENT • 15:20</span>
+<span class="font-label text-[10px] text-secondary-fixed-dim">HINDI</span>
+</div>
+<div class="bg-surface-variant/10 p-sm rounded-lg border-l-2 border-secondary">
+<p class="text-inverse-on-surface font-body-sm mb-1">नमस्ते डॉक्टर, मुझे पिछले कुछ दिनों से ठीक नहीं लग रहा है।</p>
+<p class="text-primary-fixed-dim text-body-sm font-bold">"Hello Doctor, I haven't been feeling well for the past few days."</p>
+</div>
+</div>
+<!-- Translation Block -->
+<div class="flex flex-col gap-sm">
+<div class="flex justify-between items-center opacity-60">
+<span class="font-label text-[10px]">DOCTOR • 15:21</span>
+<span class="font-label text-[10px] text-primary-fixed-dim">ENGLISH</span>
+</div>
+<div class="bg-primary-container/5 p-sm rounded-lg border-l-2 border-primary">
+<p class="text-inverse-on-surface text-body-sm font-bold">"I'm sorry to hear that, Sarah. Can you tell me exactly where you feel the pain?"</p>
+</div>
+</div>
+<!-- Active Translation Block -->
+<div class="flex flex-col gap-sm animate-pulse">
+<div class="flex justify-between items-center opacity-60">
+<span class="font-label text-[10px]">PATIENT • LIVE</span>
+<span class="font-label text-[10px] text-secondary-fixed-dim">HINDI</span>
+</div>
+<div class="bg-secondary/10 p-sm rounded-lg border-l-2 border-secondary-container">
+<p class="text-inverse-on-surface font-body-sm mb-1">मुझे तीन दिनों से सिरदर्द है और बुखार भी लग रहा है।</p>
+<p class="text-primary-fixed-dim text-body-sm font-bold">"I have had a headache for three days and I also feel like I have a fever."</p>
+</div>
+</div>
+<!-- Empty space push -->
+<div class="flex-1"></div>
+<div class="pt-sm border-t border-outline/10 text-center">
+<p class="text-[10px] text-outline uppercase tracking-widest font-label">Real-time processing active</p>
+</div>
+</div>
+</aside>
+</main>
+<!-- Bottom Control Bar -->
+<footer class="fixed bottom-0 left-0 right-0 h-24 flex items-center justify-center z-50 pointer-events-none">
+<div class="pointer-events-auto glass-panel px-xl py-sm rounded-full flex items-center gap-lg shadow-2xl border border-primary-container/20">
+<div class="flex items-center gap-md pr-lg border-r border-outline/20">
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-variant/10 text-inverse-on-surface hover:bg-surface-variant/20 transition-all">
+<span class="material-symbols-outlined">mic</span>
+</button>
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-variant/10 text-inverse-on-surface hover:bg-surface-variant/20 transition-all">
+<span class="material-symbols-outlined">videocam</span>
+</button>
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-variant/10 text-inverse-on-surface hover:bg-surface-variant/20 transition-all">
+<span class="material-symbols-outlined">present_to_all</span>
+</button>
+</div>
+<button class="bg-primary-container text-on-primary px-xl py-sm rounded-full font-h3 flex items-center gap-3 hover:bg-primary-fixed-dim hover:text-on-primary-fixed transition-all active:scale-95">
+<span class="material-symbols-outlined">history_edu</span>
+                View Medical History
+            </button>
+<div class="flex items-center gap-md pl-lg border-l border-outline/20">
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-variant/10 text-inverse-on-surface hover:bg-surface-variant/20 transition-all">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+</div>
+</footer>
+</body></html>

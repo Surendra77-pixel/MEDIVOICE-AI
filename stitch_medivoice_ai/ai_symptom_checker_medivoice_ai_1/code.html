@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MediVoice AI - Symptom Checker</title>
+<!-- Fonts and Icons -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700&amp;family=Space+Grotesk:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config Injection -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-container": "#005f71",
+                    "on-surface": "#191c1e",
+                    "surface-container-high": "#e7e8ea",
+                    "inverse-on-surface": "#f0f1f3",
+                    "primary": "#003d9b",
+                    "error": "#ba1a1a",
+                    "on-primary-fixed-variant": "#0040a2",
+                    "outline-variant": "#c3c6d6",
+                    "on-error": "#ffffff",
+                    "tertiary-fixed-dim": "#ffb59b",
+                    "on-primary-fixed": "#001848",
+                    "on-background": "#191c1e",
+                    "on-secondary-fixed": "#001f27",
+                    "inverse-surface": "#2e3132",
+                    "outline": "#737685",
+                    "tertiary-container": "#a33500",
+                    "surface-container": "#edeef0",
+                    "surface-tint": "#0c56d0",
+                    "primary-fixed": "#dae2ff",
+                    "on-primary-container": "#c4d2ff",
+                    "tertiary": "#7b2600",
+                    "surface-container-low": "#f3f4f6",
+                    "on-secondary": "#ffffff",
+                    "on-secondary-fixed-variant": "#004e5d",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed-dim": "#48d7f9",
+                    "on-tertiary-fixed-variant": "#812800",
+                    "on-tertiary-fixed": "#380d00",
+                    "inverse-primary": "#b2c5ff",
+                    "tertiary-fixed": "#ffdbcf",
+                    "on-tertiary": "#ffffff",
+                    "surface-variant": "#e1e2e4",
+                    "on-error-container": "#93000a",
+                    "on-surface-variant": "#434654",
+                    "surface-bright": "#f8f9fb",
+                    "secondary-container": "#50dcff",
+                    "on-tertiary-container": "#ffc6b2",
+                    "background": "#f8f9fb",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed": "#afecff",
+                    "secondary": "#00687b",
+                    "surface-container-highest": "#e1e2e4",
+                    "surface": "#f8f9fb",
+                    "surface-dim": "#d9dadc",
+                    "primary-fixed-dim": "#b2c5ff",
+                    "error-container": "#ffdad6",
+                    "primary-container": "#0052cc"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "base": "8px",
+                    "gutter": "24px",
+                    "xl": "80px",
+                    "sm": "12px",
+                    "xs": "4px",
+                    "container-max": "1440px",
+                    "md": "24px",
+                    "lg": "48px"
+            },
+            "fontFamily": {
+                    "body-lg": ["Manrope"],
+                    "h2": ["Space Grotesk"],
+                    "body-md": ["Manrope"],
+                    "h3": ["Space Grotesk"],
+                    "body-sm": ["Manrope"],
+                    "label": ["Manrope"],
+                    "h1": ["Space Grotesk"]
+            },
+            "fontSize": {
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                    "label": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                    "h1": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(195, 198, 214, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-hidden">
+<!-- Shell Container -->
+<div class="flex h-screen w-full">
+<!-- SideNavBar: From JSON Authority -->
+<aside class="fixed left-0 top-0 bottom-0 z-40 p-base bg-surface border-r border-outline-variant/30 shadow-md shadow-primary/10 h-screen w-64 flex flex-col">
+<div class="flex items-center gap-sm mb-lg px-xs">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div>
+<h1 class="font-h3 text-h3 text-primary">MediVoice AI</h1>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Clinical Intelligence</p>
+</div>
+</div>
+<button class="mb-lg w-full py-sm px-md bg-primary-container text-white font-body-sm rounded-lg shadow-sm hover:brightness-110 transition-all flex items-center justify-center gap-xs">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                New Consultation
+            </button>
+<nav class="flex-1 space-y-xs">
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-sm text-body-sm">Dashboard</span>
+</a>
+<!-- Active State: Symptom Checker -->
+<a class="flex items-center gap-sm p-sm bg-primary-container text-on-primary-container font-semibold rounded-lg translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">stethoscope</span>
+<span class="font-body-sm text-body-sm">Symptom Checker</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">folder_shared</span>
+<span class="font-body-sm text-body-sm">Patient Records</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body-sm text-body-sm">Clinical Insights</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm text-body-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto pt-base border-t border-outline-variant/20 flex items-center gap-sm px-xs">
+<img alt="User profile avatar" class="w-10 h-10 rounded-full object-cover border-2 border-primary/20" data-alt="A professional headshot of a friendly medical doctor in a crisp white lab coat, set against a clean, softly blurred modern hospital background. The lighting is bright and professional, emphasizing a high-trust healthcare environment consistent with a premium clinical AI platform's visual identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBKOX2qHC9iklvBh426oLwTZU44VHLyr8nQJf2FySEM9sd-7EjCJtPmqpcqWD8_X-3yHRZ6K0G7LMOgUghNehIRQVCu1ySs0c7W8V7hLzYP-SRbVwicmotUa_biKX-QzY1g0B2K778YNcqRDcHeAAVTqFhh-QKAmOkADlrVKUorYS5LuJ2HvEmVzi3coa11TJEffxa-eg1S8tutPD5DEqJSXySBo0OkN9-dgIBI0WdjX0uWoidmCvpVMBJW-8wjVXUhzdh0oYg88fA"/>
+<div class="overflow-hidden">
+<p class="font-body-sm text-body-sm font-bold truncate">Dr. Julian Vance</p>
+<p class="font-label text-label text-on-surface-variant truncate">Chief Resident</p>
+</div>
+</div>
+</aside>
+<!-- Main Content: Central Chat Interface -->
+<main class="flex-1 ml-64 mr-[320px] flex flex-col relative h-screen bg-surface-bright">
+<!-- Top Header -->
+<header class="h-16 flex items-center justify-between px-gutter glass-panel sticky top-0 z-10 border-b border-outline-variant/30">
+<div class="flex items-center gap-sm">
+<span class="material-symbols-outlined text-primary">healing</span>
+<h2 class="font-h3 text-h3 text-primary">Active Triage: Patient Case #4412</h2>
+</div>
+<div class="flex items-center gap-md">
+<div class="flex items-center gap-xs px-sm py-xs bg-secondary-container/20 text-secondary rounded-full">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+<span class="font-label text-label">AI ANALYZING LIVE</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-primary transition-colors">notifications</span>
+</div>
+</header>
+<!-- Chat Scroll Area -->
+<div class="flex-1 overflow-y-auto p-gutter space-y-lg">
+<!-- AI Message -->
+<div class="flex gap-md max-w-2xl">
+<div class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div class="flex flex-col gap-xs">
+<div class="glass-panel p-md rounded-xl rounded-tl-xs shadow-sm text-on-surface">
+<p class="font-body-md">Hello, I'm the MediVoice Clinical Assistant. I've noted you mentioned a persistent headache. To better understand the severity, how long have you been experiencing this headache, and did it start suddenly or gradually?</p>
+</div>
+<span class="font-label text-label text-on-surface-variant ml-xs">MediVoice AI • 10:24 AM</span>
+</div>
+</div>
+<!-- Patient Message -->
+<div class="flex gap-md max-w-2xl ml-auto flex-row-reverse">
+<div class="w-10 h-10 rounded-full bg-secondary flex-shrink-0 flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex flex-col items-end gap-xs">
+<div class="bg-primary text-white p-md rounded-xl rounded-tr-xs shadow-md shadow-primary/10">
+<p class="font-body-md">It's been about 3 days now. It started gradually but has become quite intense over the last few hours. I also feel a bit warm and slightly nauseous when looking at bright lights.</p>
+</div>
+<span class="font-label text-label text-on-surface-variant mr-xs">Patient Voice Entry • 10:25 AM</span>
+</div>
+</div>
+<!-- AI Message (Analysis) -->
+<div class="flex gap-md max-w-2xl">
+<div class="w-10 h-10 rounded-full bg-primary-container flex-shrink-0 flex items-center justify-center text-white shadow-sm">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div class="flex flex-col gap-xs w-full">
+<div class="glass-panel p-md rounded-xl rounded-tl-xs shadow-sm border-l-4 border-secondary">
+<p class="font-body-md mb-sm">I've detected potential <strong class="text-secondary">Photophobia</strong> and <strong class="text-secondary">Nausea</strong> in your description. This information has been added to the clinical summary.</p>
+<p class="font-body-md">Have you noticed any stiffness in your neck or a rash anywhere on your body?</p>
+</div>
+<span class="font-label text-label text-on-surface-variant ml-xs">MediVoice AI • 10:25 AM</span>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-gutter pt-0">
+<div class="max-w-4xl mx-auto glass-panel p-sm rounded-2xl shadow-lg flex items-center gap-sm">
+<button class="w-12 h-12 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined">attach_file</span>
+</button>
+<div class="flex-1 relative">
+<input class="w-full bg-transparent border-none focus:ring-0 font-body-md text-on-surface px-sm py-base" placeholder="Type or speak symptoms..." type="text"/>
+</div>
+<div class="flex items-center gap-xs">
+<button class="h-12 w-12 rounded-xl bg-secondary-container text-on-secondary-container flex items-center justify-center hover:scale-105 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">mic</span>
+</button>
+<button class="h-12 px-md rounded-xl bg-primary text-white font-body-sm flex items-center gap-xs hover:brightness-110 transition-all">
+<span class="material-symbols-outlined">send</span>
+<span>Send</span>
+</button>
+</div>
+</div>
+<p class="text-center font-label text-label text-on-surface-variant mt-sm">MediVoice AI provides triage assistance and is not a replacement for professional medical diagnosis.</p>
+</div>
+</main>
+<!-- Right Sidebar: Extracted Symptoms -->
+<aside class="fixed right-0 top-0 bottom-0 w-[320px] bg-white border-l border-outline-variant/30 flex flex-col p-gutter">
+<div class="mb-lg">
+<h3 class="font-h3 text-h3 text-on-surface mb-xs">Extracted Symptoms</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time clinical entity recognition</p>
+</div>
+<!-- Symptom List -->
+<div class="flex-1 space-y-md">
+<!-- Symptom Card 1 -->
+<div class="p-md rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-body-md font-bold text-primary">Headache</span>
+<span class="px-sm py-[2px] bg-error-container text-on-error-container rounded-full font-label text-label">Severe</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Duration: 3 days. Progressive intensity noted.</p>
+</div>
+<!-- Symptom Card 2 -->
+<div class="p-md rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-body-md font-bold text-primary">Fever</span>
+<span class="px-sm py-[2px] bg-primary-fixed text-on-primary-fixed rounded-full font-label text-label">Mild</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Reported feeling "warm". Needs objective measurement.</p>
+</div>
+<!-- Symptom Card 3 -->
+<div class="p-md rounded-xl border border-outline-variant/30 bg-surface-container-lowest shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-start mb-xs">
+<span class="font-body-md font-bold text-primary">Nausea</span>
+<span class="px-sm py-[2px] bg-secondary-container text-on-secondary-container rounded-full font-label text-label">Moderate</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Triggered by light exposure (Photophobia).</p>
+</div>
+<!-- Health Trend Sparkline (Additional Component from Style Guidance) -->
+<div class="mt-lg p-md rounded-xl bg-secondary/5 border border-secondary/20">
+<div class="flex items-center justify-between mb-sm">
+<span class="font-label text-label text-secondary uppercase tracking-wider">Patient Vitals Trend</span>
+<span class="material-symbols-outlined text-secondary text-[18px]">trending_up</span>
+</div>
+<div class="h-16 w-full flex items-end gap-1">
+<div class="flex-1 bg-secondary/20 h-[40%] rounded-t-xs"></div>
+<div class="flex-1 bg-secondary/30 h-[50%] rounded-t-xs"></div>
+<div class="flex-1 bg-secondary/40 h-[45%] rounded-t-xs"></div>
+<div class="flex-1 bg-secondary/60 h-[70%] rounded-t-xs"></div>
+<div class="flex-1 bg-secondary/80 h-[85%] rounded-t-xs"></div>
+<div class="flex-1 bg-secondary h-[100%] rounded-t-xs"></div>
+</div>
+<p class="font-label text-label text-on-surface-variant mt-sm">Symptom escalation detected via voice tone and descriptions.</p>
+</div>
+</div>
+<!-- Footer Action -->
+<div class="mt-auto pt-lg border-t border-outline-variant/20">
+<button class="w-full py-md px-gutter bg-primary text-white font-body-md font-bold rounded-xl shadow-lg shadow-primary/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined">description</span>
+                    Generate Summary for Doctor
+                </button>
+</div>
+</aside>
+</div>
+</body></html>

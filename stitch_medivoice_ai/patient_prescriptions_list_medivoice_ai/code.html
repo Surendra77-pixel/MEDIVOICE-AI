@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Prescriptions | MediVoice AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-dim": "#d9dadc",
+                      "surface": "#f8f9fb",
+                      "tertiary-container": "#a33500",
+                      "tertiary": "#7b2600",
+                      "secondary-container": "#50dcff",
+                      "on-tertiary-container": "#ffc6b2",
+                      "surface-container-high": "#e7e8ea",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary-fixed-variant": "#812800",
+                      "tertiary-fixed": "#ffdbcf",
+                      "surface-tint": "#0c56d0",
+                      "primary": "#003d9b",
+                      "surface-container-highest": "#e1e2e4",
+                      "outline": "#737685",
+                      "error-container": "#ffdad6",
+                      "secondary": "#00687b",
+                      "inverse-primary": "#b2c5ff",
+                      "primary-fixed": "#dae2ff",
+                      "on-primary-fixed-variant": "#0040a2",
+                      "inverse-surface": "#2e3132",
+                      "on-tertiary": "#ffffff",
+                      "on-primary-container": "#c4d2ff",
+                      "primary-container": "#0052cc",
+                      "tertiary-fixed-dim": "#ffb59b",
+                      "surface-variant": "#e1e2e4",
+                      "surface-container": "#edeef0",
+                      "secondary-fixed-dim": "#48d7f9",
+                      "on-secondary-fixed": "#001f27",
+                      "error": "#ba1a1a",
+                      "background": "#f8f9fb",
+                      "surface-container-low": "#f3f4f6",
+                      "on-error-container": "#93000a",
+                      "on-error": "#ffffff",
+                      "surface-bright": "#f8f9fb",
+                      "on-secondary-fixed-variant": "#004e5d",
+                      "outline-variant": "#c3c6d6",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed": "#afecff",
+                      "on-primary-fixed": "#001848",
+                      "on-background": "#191c1e",
+                      "inverse-on-surface": "#f0f1f3",
+                      "on-surface-variant": "#434654",
+                      "primary-fixed-dim": "#b2c5ff",
+                      "on-surface": "#191c1e",
+                      "on-tertiary-fixed": "#380d00",
+                      "on-secondary-container": "#005f71",
+                      "on-primary": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "lg": "48px",
+                      "gutter": "24px",
+                      "xl": "80px",
+                      "xs": "4px",
+                      "md": "24px",
+                      "base": "8px",
+                      "sm": "12px",
+                      "container-max": "1440px"
+              },
+              "fontFamily": {
+                      "h1": ["Space Grotesk"],
+                      "h3": ["Space Grotesk"],
+                      "body-lg": ["Manrope"],
+                      "label": ["Manrope"],
+                      "h2": ["Space Grotesk"],
+                      "body-sm": ["Manrope"],
+                      "body-md": ["Manrope"]
+              },
+              "fontSize": {
+                      "h1": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "h3": ["24px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                      "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                      "label": ["12px", {"lineHeight": "1.2", "letterSpacing": "0.05em", "fontWeight": "700"}],
+                      "h2": ["32px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                      "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "500"}],
+                      "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .glass-effect {
+            backdrop-filter: blur(12px);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        .ai-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(80, 220, 255, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center px-md py-sm w-full max-w-container-max mx-auto">
+<div class="flex items-center gap-md">
+<span class="font-h2 text-h2 font-bold text-primary">MediVoice AI</span>
+<div class="hidden md:flex items-center gap-base ml-lg">
+<button class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors px-sm py-xs">Dashboard</button>
+<button class="font-body-md text-body-md text-primary font-bold border-b-2 border-primary px-sm py-xs">Prescriptions</button>
+<button class="font-body-md text-body-md text-on-surface-variant hover:text-primary transition-colors px-sm py-xs">Patients</button>
+</div>
+</div>
+<div class="flex items-center gap-sm">
+<div class="hidden lg:flex items-center bg-surface-container-low px-sm py-xs rounded-full border border-outline-variant/30 w-64">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-body-sm w-full ml-xs" placeholder="Search medical records..." type="text"/>
+</div>
+<div class="flex items-center gap-xs">
+<button class="p-xs hover:bg-surface-container-high rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="p-xs hover:bg-surface-container-high rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">help</span>
+</button>
+<button class="p-xs hover:bg-surface-container-high rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant">settings</span>
+</button>
+</div>
+<div class="h-8 w-8 rounded-full overflow-hidden border border-primary/20">
+<img alt="Chief Medical Officer Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a female Chief Medical Officer in her late 40s, wearing a crisp white lab coat over a formal blue shirt. She has a confident, approachable expression, set against a clean, softly lit medical office background with subtle blue glass accents. The lighting is bright and modern, consistent with a high-end corporate medical environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCa3KkzDPXmwJlUr9EafDWeMNjBVQeeMN3C_Z0hm2nmWniI9kaTeFm5cDZX_aNu_HjCBDjw4xP9hvN5Or738k7WFzr0JHiXLYFRSuj9uE9btm5nm3E7Ml9wvZvxmykhDzOpEb4_pyT_b0PxF4EjPd4Yo6D96Xjmgt1mjnP1ZBWBBhdVuVcpdIVuHfc13cJt_WP3m9dmagRaD4Ssub4d_eT_wfqhzX2zJGGm_SHacZ7hBLIXo3h_vsIl5YOIfrVz4rD-z6ZzQ8hWRo0"/>
+</div>
+</div>
+</div>
+</header>
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full w-64 bg-surface flex flex-col p-md gap-base border-r border-outline-variant/20 shadow-md z-40 pt-24 hidden md:flex">
+<div class="flex items-center gap-sm mb-lg px-xs">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">medical_services</span>
+</div>
+<div>
+<div class="font-h3 text-h3 font-bold text-primary">MediVoice AI</div>
+<div class="font-label text-label text-on-surface-variant">Clinical Suite</div>
+</div>
+</div>
+<div class="space-y-xs flex-1">
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-sm p-sm bg-primary-container text-on-primary-container rounded-lg transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">prescriptions</span>
+<span class="font-body-sm font-bold">Prescriptions</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-sm">Patients</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">monitoring</span>
+<span class="font-body-sm">Analytics</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all active:translate-x-1" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm">Settings</span>
+</a>
+</div>
+<button class="mt-lg w-full py-sm px-md bg-primary-container text-on-primary-container rounded-lg font-bold flex items-center justify-center gap-sm hover:opacity-90 transition-all active:scale-95 shadow-sm">
+<span class="material-symbols-outlined">add</span>
+<span>New Prescription</span>
+</button>
+<div class="mt-auto space-y-xs border-t border-outline-variant/20 pt-md">
+<a class="flex items-center gap-sm p-sm text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-body-sm">Help Center</span>
+</a>
+<a class="flex items-center gap-sm p-sm text-error hover:bg-error-container/20 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body-sm">Logout</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 pt-24 pb-lg px-md md:px-lg max-w-container-max mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-md mb-xl">
+<div>
+<h1 class="font-h1 text-h1 text-primary">My Prescriptions</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant mt-xs">Manage your medication schedules and renewals.</p>
+</div>
+<div class="flex bg-surface-container-low p-1 rounded-xl w-fit border border-outline-variant/20">
+<button class="px-md py-sm bg-white shadow-sm rounded-lg font-bold text-primary">Active Prescriptions</button>
+<button class="px-md py-sm text-on-surface-variant hover:text-primary transition-colors">Past Prescriptions</button>
+</div>
+</div>
+<!-- Content Grid (Asymmetric Bento Style) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-lg">
+<!-- Left Column: Active Prescription Cards -->
+<div class="lg:col-span-8 space-y-md">
+<!-- Prescription Card 1 -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-md border-b border-outline-variant/20 bg-surface-container-lowest flex justify-between items-start">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-primary-container/10 flex items-center justify-center">
+<img alt="Dr. Sarah Mitchell" class="w-full h-full object-cover" data-alt="A portrait of a male cardiologist in a clean clinical environment. He is wearing a professional blue tie and a white medical coat. The background shows a modern medical examination room with soft, high-key lighting and a high-trust atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCi1jh-JSkL7aUmfs2MFYPsxHz21xeQMwB4F0vXdje1VeV-nRLqSyNIN1lFe5X-ANcT7kLMkyZSh7m5kdat8lNNPKlMH6FfobYh9bzZIdLVUCmJRi21o1b_IAJha9pj756VtEGxaCXCs1wcJP3bRS5oCJPMpSsb1TOlRW1a5uiYr_7q_kB-mSH4e7MVsbaWmlVwo1co7DpoUd5U03Xm4E20Ht4DZuRNF3YFzt_IT4W3QPAl5r6ek0OHWfcHY2PE-ufvQg5q-HI-mUI"/>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Dr. Sarah Mitchell</h3>
+<div class="flex items-center gap-base mt-xs">
+<span class="font-label text-label uppercase text-primary tracking-widest">Cardiology</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-body-sm text-on-surface-variant">Issued: Oct 24, 2023</span>
+</div>
+</div>
+</div>
+<span class="px-sm py-xs bg-green-100 text-green-700 text-label rounded-full font-bold flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            ACTIVE
+                        </span>
+</div>
+<div class="p-md flex-1">
+<div class="overflow-hidden border border-outline-variant/10 rounded-lg">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20">Drug Name</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20">Dosage</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20">Frequency</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20 text-right">Trend</th>
+</tr>
+</thead>
+<tbody class="bg-white">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-md py-md font-bold text-on-surface border-b border-outline-variant/10">Lisinopril</td>
+<td class="px-md py-md text-on-surface-variant border-b border-outline-variant/10">10mg</td>
+<td class="px-md py-md text-on-surface-variant border-b border-outline-variant/10">Once daily</td>
+<td class="px-md py-md text-right border-b border-outline-variant/10">
+<div class="inline-flex items-center gap-1">
+<div class="w-1 h-2 bg-secondary rounded-full"></div>
+<div class="w-1 h-3 bg-secondary rounded-full"></div>
+<div class="w-1 h-4 bg-secondary rounded-full"></div>
+<div class="w-1 h-2 bg-secondary rounded-full"></div>
+<div class="w-1 h-3 bg-secondary rounded-full"></div>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-md py-md font-bold text-on-surface border-b border-outline-variant/10">Atorvastatin</td>
+<td class="px-md py-md text-on-surface-variant border-b border-outline-variant/10">20mg</td>
+<td class="px-md py-md text-on-surface-variant border-b border-outline-variant/10">At bedtime</td>
+<td class="px-md py-md text-right border-b border-outline-variant/10">
+<div class="inline-flex items-center gap-1">
+<div class="w-1 h-4 bg-secondary rounded-full"></div>
+<div class="w-1 h-2 bg-secondary rounded-full"></div>
+<div class="w-1 h-3 bg-secondary rounded-full"></div>
+<div class="w-1 h-5 bg-secondary rounded-full"></div>
+<div class="w-1 h-4 bg-secondary rounded-full"></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="p-md bg-surface-container-low/30 border-t border-outline-variant/20 flex flex-col sm:flex-row gap-base">
+<button class="flex-1 py-sm px-md bg-primary-container text-white font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[20px]">alarm</span>
+                            Set Medication Reminder
+                        </button>
+<button class="flex-1 py-sm px-md border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary/5 transition-all active:scale-95 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+                            Reorder
+                        </button>
+</div>
+</div>
+<!-- Prescription Card 2 -->
+<div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="p-md border-b border-outline-variant/20 flex justify-between items-start">
+<div class="flex gap-md">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-primary-container/10 flex items-center justify-center">
+<img alt="Dr. Michael Chen" class="w-full h-full object-cover" data-alt="A portrait of an Asian female endocrinologist in her 30s. She is smiling warmly, wearing a white lab coat and a stethoscope around her neck. The setting is a brightly lit, high-tech clinic with minimalist decor and glass partitions. The mood is professional yet inviting and high-trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAAiXU_34x2BeiNNxqROg2JKI2UELWwD6YLg2E7wcSkzjWHXRhasnWX0vkn-NeVizZ-2gHx8tf9hW2iMafZJ8xe6FcLsLNkvObQIcPKAfvCF9KgtelUvDhP1_vHdRwfuZ0Pc1Y_xMEmWBdefMBqjfaifTN5F52dMexvw5ZbTu2hSCANTorkCCZjVZHh7j6lp8Kbw2n8l9RMXDvt-RzYaqsiC5kxHbW5Al9omU8H9uDU6OqK2woFTw42BoXQ6P-Ur110GN9jX5m4Dwk"/>
+</div>
+<div>
+<h3 class="font-h3 text-h3 text-on-surface">Dr. Michael Chen</h3>
+<div class="flex items-center gap-base mt-xs">
+<span class="font-label text-label uppercase text-primary tracking-widest">Endocrinology</span>
+<span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="font-body-sm text-on-surface-variant">Issued: Nov 12, 2023</span>
+</div>
+</div>
+</div>
+<span class="px-sm py-xs bg-green-100 text-green-700 text-label rounded-full font-bold flex items-center gap-xs">
+<span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            ACTIVE
+                        </span>
+</div>
+<div class="p-md flex-1">
+<div class="overflow-hidden border border-outline-variant/10 rounded-lg">
+<table class="w-full text-left border-collapse">
+<thead class="bg-surface-container-low">
+<tr>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20">Drug Name</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20">Dosage</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20">Frequency</th>
+<th class="px-md py-sm font-label text-label text-on-surface-variant border-b border-outline-variant/20 text-right">Trend</th>
+</tr>
+</thead>
+<tbody class="bg-white">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="px-md py-md font-bold text-on-surface">Metformin</td>
+<td class="px-md py-md text-on-surface-variant">500mg</td>
+<td class="px-md py-md text-on-surface-variant">Twice daily</td>
+<td class="px-md py-md text-right">
+<div class="inline-flex items-center gap-1">
+<div class="w-1 h-3 bg-secondary rounded-full"></div>
+<div class="w-1 h-4 bg-secondary rounded-full"></div>
+<div class="w-1 h-2 bg-secondary rounded-full"></div>
+<div class="w-1 h-3 bg-secondary rounded-full"></div>
+<div class="w-1 h-4 bg-secondary rounded-full"></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="p-md bg-surface-container-low/30 border-t border-outline-variant/20 flex flex-col sm:flex-row gap-base">
+<button class="flex-1 py-sm px-md bg-primary-container text-white font-bold rounded-lg shadow-sm hover:shadow-md transition-all active:scale-95 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[20px]">alarm</span>
+                            Set Medication Reminder
+                        </button>
+<button class="flex-1 py-sm px-md border-2 border-primary text-primary font-bold rounded-lg hover:bg-primary/5 transition-all active:scale-95 flex items-center justify-center gap-sm">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+                            Reorder
+                        </button>
+</div>
+</div>
+</div>
+<!-- Right Column: AI Insights & Quick Stats -->
+<div class="lg:col-span-4 space-y-lg">
+<!-- AI Insight Card -->
+<div class="ai-card p-md rounded-xl shadow-md border border-secondary-container/30 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-sm opacity-10">
+<span class="material-symbols-outlined text-6xl text-secondary">psychology</span>
+</div>
+<div class="flex items-center gap-sm mb-md">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<h4 class="font-h3 text-h3 text-primary">AI Compliance Check</h4>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-md">
+                        Based on your pharmacy records, you've maintained <span class="text-secondary font-bold">94% compliance</span> this month. Keep up the good work!
+                    </p>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-secondary h-full" style="width: 94%;"></div>
+</div>
+<div class="flex justify-between mt-xs font-label text-label text-on-surface-variant">
+<span>Compliance Score</span>
+<span class="text-secondary font-bold">94%</span>
+</div>
+</div>
+<!-- Pharmacy Quick Card -->
+<div class="bg-white p-md rounded-xl border border-outline-variant/30 shadow-sm">
+<h4 class="font-label text-label uppercase text-on-surface-variant tracking-widest mb-md">Primary Pharmacy</h4>
+<div class="flex items-start gap-md">
+<div class="p-sm bg-surface-container-low rounded-lg">
+<span class="material-symbols-outlined text-primary">local_pharmacy</span>
+</div>
+<div>
+<div class="font-bold text-on-surface">CVS Pharmacy #4928</div>
+<div class="font-body-sm text-on-surface-variant">1200 Healthcare Way<br/>Los Angeles, CA 90210</div>
+<div class="flex items-center gap-xs mt-sm text-primary font-bold text-body-sm">
+<span class="material-symbols-outlined text-[18px]">call</span>
+                                (555) 123-4567
+                            </div>
+</div>
+</div>
+<button class="w-full mt-md py-sm border border-outline-variant text-on-surface-variant font-bold rounded-lg hover:bg-surface-container-low transition-colors">
+                        Change Pharmacy
+                    </button>
+</div>
+<!-- Reminder Schedule -->
+<div class="bg-white p-md rounded-xl border border-outline-variant/30 shadow-sm">
+<div class="flex justify-between items-center mb-md">
+<h4 class="font-label text-label uppercase text-on-surface-variant tracking-widest">Today's Schedule</h4>
+<span class="text-label text-primary font-bold">Nov 15</span>
+</div>
+<div class="space-y-md">
+<div class="flex items-center gap-md p-sm bg-surface-container-low/50 rounded-lg">
+<div class="font-bold text-primary w-12 text-center border-r border-outline-variant/30 pr-base">08:00 AM</div>
+<div class="flex-1">
+<div class="font-bold text-on-surface text-body-sm">Lisinopril</div>
+<div class="text-label text-on-surface-variant">10mg • Taken</div>
+</div>
+<span class="material-symbols-outlined text-green-500" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex items-center gap-md p-sm border border-secondary-container/20 rounded-lg">
+<div class="font-bold text-primary w-12 text-center border-r border-outline-variant/30 pr-base">08:00 PM</div>
+<div class="flex-1">
+<div class="font-bold text-on-surface text-body-sm">Atorvastatin</div>
+<div class="text-label text-on-surface-variant">20mg • Upcoming</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant">schedule</span>
+</div>
+<div class="flex items-center gap-md p-sm border border-outline-variant/20 rounded-lg">
+<div class="font-bold text-primary w-12 text-center border-r border-outline-variant/30 pr-base">08:00 PM</div>
+<div class="flex-1">
+<div class="font-bold text-on-surface text-body-sm">Metformin</div>
+<div class="text-label text-on-surface-variant">500mg • Upcoming</div>
+</div>
+<span class="material-symbols-outlined text-outline-variant">schedule</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for quick action -->
+<button class="fixed bottom-lg right-lg w-14 h-14 bg-primary text-white rounded-full shadow-lg hover:shadow-xl transition-all active:scale-90 flex items-center justify-center z-50">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</body></html>
