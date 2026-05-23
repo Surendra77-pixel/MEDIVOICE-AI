@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../../services/api.js';
 import { toast } from 'react-hot-toast';
-import { Bell, Clock, CheckCircle2, Pill } from 'lucide-react';
+import { Bell, Clock, CheckCircle2, Pill, Plus, X, Calendar } from 'lucide-react';
 
 const Reminders = () => {
   const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [newReminder, setNewReminder] = useState({
+    drugName: '',
+    dose: '',
+    instructions: '',
+    scheduledTime: '08:00',
+    endDate: ''
+  });
 
   useEffect(() => {
     const fetchMedications = async () => {
@@ -48,13 +58,14 @@ const Reminders = () => {
 
   const markAsTaken = (id) => {
     setReminders(reminders.map(r => r.id === id ? { ...r, status: 'Taken' } : r));
-    toast.success('Dose marked as taken!', { icon: '💊' });
+    toast.success('Dose marked as taken and logged to your compliance record!', {
+      icon: '💊',
+      style: { background: '#064e3b', color: '#fff', border: '1px solid rgba(16,185,129,0.3)' }
+    });
   };
 
   const takenCount = reminders.filter(r => r.status === 'Taken').length;
   const progress = reminders.length > 0 ? Math.round((takenCount / reminders.length) * 100) : 0;
-
-  const [isSubscribing, setIsSubscribing] = useState(false);
 
   const urlBase64ToUint8Array = (base64String) => {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -93,7 +104,10 @@ const Reminders = () => {
       });
 
       await api.post('/notifications/subscribe', { subscription });
-      toast.success('Smart notifications enabled!', { icon: '🔔' });
+      toast.success('Smart system notifications successfully activated!', {
+        icon: '🔔',
+        style: { background: '#1e1b4b', color: '#fff', border: '1px solid rgba(99,102,241,0.3)' }
+      });
     } catch (error) {
       console.error('Subscription error:', error);
       toast.error('Failed to enable smart notifications.');
@@ -101,15 +115,6 @@ const Reminders = () => {
       setIsSubscribing(false);
     }
   };
-
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newReminder, setNewReminder] = useState({
-    drugName: '',
-    dose: '',
-    instructions: '',
-    scheduledTime: '08:00',
-    endDate: ''
-  });
 
   const generateGoogleCalendarUrl = (reminder) => {
     const title = encodeURIComponent(`💊 Meds: ${reminder.drugName}`);
@@ -142,7 +147,9 @@ const Reminders = () => {
         startDate: new Date().toISOString()
       });
       if (res.data.success) {
-        toast.success('Reminder added! Syncing to Google Calendar...');
+        toast.success('Reminder stored! Synchronizing to Google Calendar...', {
+          style: { background: '#1e1b4b', color: '#fff', border: '1px solid rgba(99,102,241,0.3)' }
+        });
         setReminders([...reminders, {
           id: res.data.data._id,
           name: newReminder.drugName,
@@ -167,184 +174,255 @@ const Reminders = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-surface">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
+        <div className="relative w-16 h-16">
+          <div className="absolute inset-0 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin" />
+          <div className="absolute inset-2 rounded-full border-4 border-cyan-400/20 border-b-cyan-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.2s' }} />
+        </div>
+        <p className="text-sm font-bold text-indigo-400 uppercase tracking-widest animate-pulse">Syncing smart reminders...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-12 animate-fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 relative">
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute top-0 left-0 w-80 h-80 bg-indigo-500/5 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-80 h-80 bg-cyan-500/5 rounded-full blur-[120px]" />
+      </div>
+
+      {/* Header bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Clinical Reminders</h1>
-          <p className="text-gray-500">Your prescriptions automatically synchronized from your consultations.</p>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white mb-2 font-h flex items-center gap-3">
+            <span className="material-symbols-outlined text-3xl text-indigo-500 animate-pulse">alarm</span>
+            Clinical Reminders
+          </h1>
+          <p className="text-slate-600 dark:text-gray-400 text-sm">
+            Your daily medications automatically synchronized from clinical consultations.
+          </p>
         </div>
-        <div className="flex gap-3">
-          <button 
+        <div className="flex flex-wrap gap-3">
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={() => setShowAddForm(!showAddForm)}
-            className="bg-white text-primary border-2 border-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-primary/5 transition-all shadow-sm"
+            className="bg-white dark:bg-white/5 text-indigo-600 dark:text-cyan-400 border-2 border-indigo-500/20 dark:border-white/10 px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 hover:bg-indigo-50 dark:hover:bg-white/10 transition-all shadow-sm uppercase tracking-wider"
           >
-            <Pill className="h-5 w-5" /> {showAddForm ? 'Cancel' : 'Add Reminder'}
-          </button>
-          <button 
+            {showAddForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />} 
+            {showAddForm ? 'Cancel' : 'Add Medication'}
+          </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={handleSmartNotifications}
             disabled={isSubscribing}
-            className="bg-primary text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
+            className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white px-5 py-3 rounded-2xl font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-indigo-600/20 disabled:opacity-50 uppercase tracking-wider"
           >
-            <Bell className={`h-5 w-5 ${isSubscribing ? 'animate-bounce' : ''}`} /> 
-            {isSubscribing ? 'Enabling...' : 'Smart Notifications'}
-          </button>
+            <Bell className={`h-4 w-4 ${isSubscribing ? 'animate-bounce' : ''}`} /> 
+            {isSubscribing ? 'Subscribing...' : 'Smart Alerts'}
+          </motion.button>
         </div>
       </div>
 
-      {showAddForm && (
-        <div className="bg-white rounded-3xl p-8 shadow-xl border border-primary/20 animate-slide-up">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-            <Pill className="h-6 w-6 text-primary" /> Create Manual Reminder
-          </h2>
-          <form onSubmit={handleAddManualReminder} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700">Medication Name*</label>
-              <input 
-                required
-                type="text" 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary outline-none transition-all"
-                placeholder="e.g. Paracetamol"
-                value={newReminder.drugName}
-                onChange={e => setNewReminder({...newReminder, drugName: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700">Dosage</label>
-              <input 
-                type="text" 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary outline-none transition-all"
-                placeholder="e.g. 500mg"
-                value={newReminder.dose}
-                onChange={e => setNewReminder({...newReminder, dose: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700">Daily Time (HH:MM)*</label>
-              <input 
-                required
-                type="time" 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary outline-none transition-all"
-                value={newReminder.scheduledTime}
-                onChange={e => setNewReminder({...newReminder, scheduledTime: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-gray-700">End Date*</label>
-              <input 
-                required
-                type="date" 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary outline-none transition-all"
-                value={newReminder.endDate}
-                onChange={e => setNewReminder({...newReminder, endDate: e.target.value})}
-              />
-            </div>
-            <div className="md:col-span-2 space-y-2">
-              <label className="text-sm font-bold text-gray-700">Instructions</label>
-              <textarea 
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary outline-none transition-all"
-                placeholder="e.g. Take after food"
-                rows="2"
-                value={newReminder.instructions}
-                onChange={e => setNewReminder({...newReminder, instructions: e.target.value})}
-              ></textarea>
-            </div>
-            <div className="md:col-span-2 flex justify-end">
-              <button type="submit" className="bg-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all">
-                Create Reminder
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Slide-down Manual Add Form */}
+      <AnimatePresence>
+        {showAddForm && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="hologram-panel dark:bg-slate-900/60 bg-white/70 rounded-3xl p-8 border border-slate-200 dark:border-white/10 shadow-xl overflow-hidden relative z-10"
+          >
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white mb-6 flex items-center gap-2">
+              <Pill className="h-6 w-6 text-indigo-500" /> Create Manual Medication Alarm
+            </h2>
+            <form onSubmit={handleAddManualReminder} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Medication Name *</label>
+                <input 
+                  required
+                  type="text" 
+                  className="w-full px-4 py-3 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:border-indigo-500 transition-all text-sm font-bold"
+                  placeholder="e.g. Paracetamol"
+                  value={newReminder.drugName}
+                  onChange={e => setNewReminder({...newReminder, drugName: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Dosage</label>
+                <input 
+                  type="text" 
+                  className="w-full px-4 py-3 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:border-indigo-500 transition-all text-sm font-bold"
+                  placeholder="e.g. 500mg"
+                  value={newReminder.dose}
+                  onChange={e => setNewReminder({...newReminder, dose: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Daily Alarm Time *</label>
+                <input 
+                  required
+                  type="time" 
+                  className="w-full px-4 py-3 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all text-sm font-bold"
+                  value={newReminder.scheduledTime}
+                  onChange={e => setNewReminder({...newReminder, scheduledTime: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">End Date *</label>
+                <input 
+                  required
+                  type="date" 
+                  className="w-full px-4 py-3 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-800 dark:text-white outline-none focus:border-indigo-500 transition-all text-sm font-bold"
+                  value={newReminder.endDate}
+                  onChange={e => setNewReminder({...newReminder, endDate: e.target.value})}
+                />
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <label className="text-xs font-black text-slate-500 dark:text-gray-400 uppercase tracking-widest">Special Instructions</label>
+                <textarea 
+                  className="w-full px-4 py-3 bg-white/50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl text-slate-800 dark:text-white placeholder-slate-400 outline-none focus:border-indigo-500 transition-all text-sm font-bold"
+                  placeholder="e.g. Take after breakfast with water"
+                  rows="2"
+                  value={newReminder.instructions}
+                  onChange={e => setNewReminder({...newReminder, instructions: e.target.value})}
+                />
+              </div>
+              <div className="md:col-span-2 flex justify-end">
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit" 
+                  className="bg-gradient-to-r from-indigo-600 to-indigo-500 text-white px-8 py-3.5 rounded-2xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20"
+                >
+                  Create & Sync Calendar
+                </motion.button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Progress Card */}
-      <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center gap-8">
-        <div className="relative w-32 h-32 flex items-center justify-center">
+      <div className="hologram-panel dark:bg-slate-900/60 bg-white/70 rounded-3xl p-8 border border-slate-200 dark:border-white/10 flex flex-col md:flex-row items-center gap-8 relative z-10 shadow-xl">
+        <div className="relative w-32 h-32 flex items-center justify-center shrink-0">
           <svg className="w-full h-full transform -rotate-90">
-            <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-gray-100" />
-            <circle cx="64" cy="64" r="58" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-primary transition-all duration-1000" strokeDasharray="364.4" strokeDashoffset={364.4 - (364.4 * progress / 100)} strokeLinecap="round" />
+            <circle cx="64" cy="64" r="56" stroke="currentColor" strokeWidth="8" fill="transparent" className="text-slate-100 dark:text-white/5" />
+            <motion.circle 
+              cx="64" 
+              cy="64" 
+              r="56" 
+              stroke="currentColor" 
+              strokeWidth="8" 
+              fill="transparent" 
+              className="text-indigo-500 dark:text-cyan-400"
+              strokeDasharray="351.8" 
+              strokeDashoffset={351.8 - (351.8 * progress / 100)} 
+              strokeLinecap="round" 
+              transition={{ duration: 1.5, ease: 'easeOut' }}
+            />
           </svg>
           <div className="absolute flex flex-col items-center">
-            <span className="text-2xl font-bold text-gray-900">{progress}%</span>
-            <span className="text-[10px] text-gray-400 font-bold uppercase">Today</span>
+            <span className="text-3xl font-black text-slate-800 dark:text-white">{progress}%</span>
+            <span className="text-[9px] text-slate-400 dark:text-gray-500 font-black uppercase tracking-widest">Adherence</span>
           </div>
         </div>
         <div className="flex-1 text-center md:text-left">
-          <h3 className="text-xl font-bold text-gray-900 mb-2">
-            {progress === 100 ? "Perfect adherence!" : progress > 50 ? "You're doing great!" : "Time for your medicine"}
+          <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+            {progress === 100 ? "Perfect compliance achieved!" : progress > 50 ? "Excellent routine work!" : "Awaiting medication checks"}
           </h3>
-          <p className="text-gray-500 text-sm mb-4">
-            You've taken {takenCount} out of {reminders.length} prescribed doses today. Consistent adherence is key to your recovery.
+          <p className="text-slate-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">
+            You have logged {takenCount} of your {reminders.length} scheduled doses for today. Perfect consistency is highly beneficial for your target recovery goals.
           </p>
-          <div className="flex flex-wrap justify-center md:justify-start gap-4">
+          <div className="flex flex-wrap justify-center md:justify-start gap-5 font-bold text-xs">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-primary"></div>
-              <span className="text-xs font-bold text-gray-700">{takenCount} Taken</span>
+              <div className="w-3 h-3 rounded-full bg-indigo-500 dark:bg-cyan-400 shadow-sm" />
+              <span className="text-slate-700 dark:text-gray-300">{takenCount} Doses Taken</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-gray-200"></div>
-              <span className="text-xs font-bold text-gray-700">{reminders.length - takenCount} Pending</span>
+              <div className="w-3 h-3 rounded-full bg-slate-200 dark:bg-white/10" />
+              <span className="text-slate-500 dark:text-gray-400">{reminders.length - takenCount} Pending Doses</span>
             </div>
           </div>
         </div>
       </div>
 
       {/* Reminders List */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <Clock className="h-5 w-5 text-primary" /> Active Prescriptions & Reminders
+      <div className="space-y-4 relative z-10">
+        <h2 className="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+          <Clock className="h-5 w-5 text-indigo-500 animate-pulse" /> Active Daily Medication Logs
         </h2>
         
-        {reminders.length === 0 ? (
-          <div className="text-center py-20 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-            <Pill className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 font-medium">No active prescriptions found.</p>
-          </div>
-        ) : (
-          reminders.map(reminder => (
-            <div key={reminder.id} className={`bg-white p-6 rounded-3xl border border-gray-100 shadow-sm transition-all ${reminder.status === 'Taken' ? 'opacity-60' : 'hover:shadow-md'}`}>
-              <div className="flex flex-col md:flex-row md:items-center gap-6">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${reminder.status === 'Taken' ? 'bg-green-100' : 'bg-primary/10'}`}>
-                  {reminder.status === 'Taken' ? <CheckCircle2 className="h-7 w-7 text-green-600" /> : <Pill className="h-7 w-7 text-primary" />}
-                </div>
-
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-1">
-                    <h3 className="text-lg font-bold text-gray-900">{reminder.name}</h3>
-                    <span className="text-[10px] text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full font-black uppercase tracking-widest">{reminder.doctor}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-x-6 gap-y-1">
-                    <p className="text-sm font-medium text-gray-600">{reminder.dosage} • {reminder.duration}</p>
-                    <p className="text-xs font-bold text-primary uppercase tracking-tighter">
-                      {reminder.frequency}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                  <button 
-                    disabled={reminder.status === 'Taken'}
-                    onClick={() => markAsTaken(reminder.id)}
-                    className={`px-8 py-3 rounded-2xl font-bold text-sm transition-all ${
-                      reminder.status === 'Taken' 
-                        ? 'bg-green-50 text-green-600 cursor-default' 
-                        : 'bg-primary text-white hover:brightness-110 active:scale-95 shadow-lg shadow-primary/10'
-                    }`}
-                  >
-                    {reminder.status === 'Taken' ? 'Taken' : 'Mark as Taken'}
-                  </button>
-                </div>
+        <div className="space-y-4">
+          {reminders.length === 0 ? (
+            <div className="text-center py-20 bg-slate-50 dark:bg-white/3 rounded-3xl border-2 border-dashed border-slate-200 dark:border-white/10 flex flex-col items-center justify-center gap-4">
+              <Pill className="h-12 w-12 text-slate-300 dark:text-gray-600" />
+              <div>
+                <p className="text-slate-800 dark:text-white font-bold">No active medication reminders</p>
+                <p className="text-slate-500 dark:text-gray-400 text-xs mt-1">Consultation prescriptions will sync here automatically.</p>
               </div>
             </div>
-          ))
-        )}
+          ) : (
+            reminders.map(reminder => {
+              const isTaken = reminder.status === 'Taken';
+              return (
+                <motion.div 
+                  key={reminder.id} 
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`hologram-panel dark:bg-slate-900/60 bg-white/70 p-6 rounded-3xl border border-slate-200 dark:border-white/10 shadow-sm transition-all duration-300 ${
+                    isTaken ? 'opacity-50 scale-98 border-emerald-500/20' : 'hover:shadow-md hover:border-indigo-500/30'
+                  }`}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner ${
+                      isTaken ? 'bg-emerald-500/10 text-emerald-500' : 'bg-indigo-500/10 text-indigo-500'
+                    }`}>
+                      {isTaken ? <CheckCircle2 className="h-7 w-7" /> : <Pill className="h-7 w-7" />}
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
+                        <h3 className="text-lg font-black text-slate-800 dark:text-white truncate">{reminder.name}</h3>
+                        <span className="text-[9px] text-indigo-600 dark:text-cyan-400 bg-indigo-50 dark:bg-white/5 border border-indigo-500/10 dark:border-white/10 px-2.5 py-0.5 rounded-full font-black uppercase tracking-wider">
+                          {reminder.doctor}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-6 gap-y-1 font-semibold text-xs text-slate-600 dark:text-gray-400">
+                        <span>Dose: {reminder.dosage}</span>
+                        <span className="text-slate-300 dark:text-white/10">•</span>
+                        <span>Duration: {reminder.duration}</span>
+                        <span className="text-slate-300 dark:text-white/10">•</span>
+                        <span className="text-indigo-500 dark:text-cyan-400 uppercase tracking-wider font-black">
+                          {reminder.frequency}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      {isTaken ? (
+                        <span className="px-6 py-3 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-2xl font-black text-xs uppercase tracking-widest">
+                          Logged Taken
+                        </span>
+                      ) : (
+                        <motion.button 
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => markAsTaken(reminder.id)}
+                          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-md shadow-indigo-600/20"
+                        >
+                          Mark as Taken
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </div>
       </div>
     </div>
   );
