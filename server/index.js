@@ -1,8 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-const http = require('http');
-const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -20,38 +18,13 @@ const adminRoutes = require('./routes/adminRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
-const notificationService = require('./services/notificationService');
 const errorHandler = require('./middleware/errorHandler');
 
 // Initialize app
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
-  }
-});
 
-// Connect to Database
-connectDB();
-
-// Initialize Services
-notificationService.init(io);
-
-// Socket Connection Handling
-io.on('connection', (socket) => {
-  logger.info(`New socket connected: ${socket.id}`);
-  
-  socket.on('join_consultation', (consultationId) => {
-    socket.join(`consultation_${consultationId}`);
-    logger.info(`Socket ${socket.id} joined room consultation_${consultationId}`);
-  });
-
-  socket.on('disconnect', () => {
-    logger.info(`Socket disconnected: ${socket.id}`);
-  });
-});
+// Connect to Database (non-blocking for serverless)
+connectDB().catch(err => logger.error('Initial DB connection failed:', err.message));
 
 // Middleware
 app.use(helmet({
@@ -88,6 +61,20 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
+// Middleware to ensure DB is connected before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    logger.error('Database connection failed on request:', error.message);
+    return res.status(503).json({
+      success: false,
+      message: 'Database temporarily unavailable. Please try again in a moment.'
+    });
+  }
+});
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/ai', aiRoutes);
@@ -116,33 +103,14 @@ app.get('/api/v1', (req, res) => {
   });
 });
 
-// Socket.io
-io.on('connection', (socket) => {
-  logger.info(`New client connected: ${socket.id}`);
-  
-  socket.on('join', (userId) => {
-    socket.join(userId);
-    logger.info(`User ${userId} joined their notification room`);
-  });
-
-  socket.on('joinRole', (role) => {
-    socket.join(role);
-    logger.info(`User joined role room: ${role}`);
-  });
-  
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-});
-
-// Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
+// Serve static assets in production (non-Vercel deployments like Render)
+if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
   const path = require('path');
   app.use(express.static(path.join(__dirname, '../client/dist')));
   app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, '../client/dist/index.html'));
   });
-} else {
+} else if (process.env.NODE_ENV !== 'production') {
   // Friendly message for root in development
   app.get('/', (req, res) => {
     res.status(200).json({
@@ -157,21 +125,60 @@ if (process.env.NODE_ENV === 'production') {
 // Global Error Handler
 app.use(errorHandler);
 
-// Start Server
+// Start Server (only when NOT on Vercel — Vercel uses the exported app)
 const PORT = process.env.PORT || 3000;
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+if (!process.env.VERCEL) {
+  const http = require('http');
+  const { Server } = require('socket.io');
+  const notificationService = require('./services/notificationService');
+
+  const server = http.createServer(app);
+  const io = new Server(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST']
+    }
+  });
+
+  // Initialize Services
+  notificationService.init(io);
+
+  // Socket Connection Handling
+  io.on('connection', (socket) => {
+    logger.info(`New socket connected: ${socket.id}`);
+    
+    socket.on('join_consultation', (consultationId) => {
+      socket.join(`consultation_${consultationId}`);
+      logger.info(`Socket ${socket.id} joined room consultation_${consultationId}`);
+    });
+
+    socket.on('join', (userId) => {
+      socket.join(userId);
+      logger.info(`User ${userId} joined their notification room`);
+    });
+
+    socket.on('joinRole', (role) => {
+      socket.join(role);
+      logger.info(`User joined role room: ${role}`);
+    });
+    
+    socket.on('disconnect', () => {
+      logger.info(`Socket disconnected: ${socket.id}`);
+    });
+  });
+
   server.listen(PORT, () => {
     logger.info(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
   });
-}
 
-process.on('unhandledRejection', (err, promise) => {
-  logger.error(`Error: ${err.message}`);
-  if (server.listening) {
-    server.close(() => process.exit(1));
-  } else {
-    process.exit(1);
-  }
-});
+  process.on('unhandledRejection', (err, promise) => {
+    logger.error(`Error: ${err.message}`);
+    if (server.listening) {
+      server.close(() => process.exit(1));
+    } else {
+      process.exit(1);
+    }
+  });
+}
 
 module.exports = app;
