@@ -86,7 +86,7 @@ app.use('/api/v1/reminders', reminderRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 
 // Health Check
-app.get('/health', (req, res) => {
+app.get(['/health', '/api/health'], (req, res) => {
   res.status(200).json({
     status: 'ok',
     db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
