@@ -8,7 +8,7 @@ class PushService {
   constructor() {
     this.publicKey = process.env.VAPID_PUBLIC_KEY;
     this.privateKey = process.env.VAPID_PRIVATE_KEY;
-    this.email = process.env.EMAIL_FROM || 'admin@medivoice.ai';
+    this.email = process.env.PUSH_EMAIL || 'admin@medivoice.ai';
 
     if (this.publicKey && this.privateKey) {
       webpush.setVapidDetails(

@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: medivoice-ai
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm run build
+    startCommand: npm run start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: VAPID_PUBLIC_KEY
+        value: BGatOmEeVEoNUADrra98xXa2RbvXQARBmps3Sbl42CpdcX2sidl-E2MpxgCYaKnbnU1d7T5-fQtq9USH5qdH2nc
+      - key: VAPID_PRIVATE_KEY
+        value: h3Qg_H4uGTQaUpttZAoCCGkWxZomjtaknFPwC8mZBsM
+      - key: PUSH_EMAIL
+        value: admin@medivoice.ai
+      - key: EMAIL_HOST
+        value: smtp.gmail.com
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: "MediVoice AI <noreply@medivoice.ai>"
+      - key: HUGGINGFACE_API_KEY
+        sync: false
+      - key: RATE_LIMIT_WINDOW_MS
+        value: "900000"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: "200"
+      - key: OTP_EXPIRY_MINUTES
+        value: "10"

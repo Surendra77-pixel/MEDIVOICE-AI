@@ -122,8 +122,17 @@ const AppointmentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
 );
+
+// ── Virtual: timeSlot ──────────────────────────────────────────────────────
+AppointmentSchema.virtual('timeSlot').get(function() {
+  if (!this.scheduledAt) return null;
+  return this.scheduledAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+});
+
 
 // ── Pre-save: Compute endAt ────────────────────────────────────────────────
 AppointmentSchema.pre('save', function (next) {

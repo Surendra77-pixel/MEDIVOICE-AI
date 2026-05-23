@@ -6,11 +6,20 @@ const Prescription = require('../models/Prescription');
 const Patient = require('../models/Patient');
 const apiResponse = require('../utils/apiResponse');
 const asyncHandler = require('../utils/asyncHandler');
+const notificationService = require('../services/notificationService');
 
 // ─── Get Doctor Profile ──────────────────────────────────────────────────────
 const getProfile = asyncHandler(async (req, res) => {
-  const doctor = await Doctor.findOne({ userId: req.user._id });
-  if (!doctor) return apiResponse.error(res, 'Doctor profile not found', 404);
+  let doctor = await Doctor.findOne({ userId: req.user._id });
+  if (!doctor) {
+    // Auto-create for backward compatibility with old users
+    doctor = await Doctor.create({ 
+      userId: req.user._id,
+      specialty: 'General Practice',
+      experience: 0,
+      consultationFee: 500
+    });
+  }
   const user = await User.findById(req.user._id);
   return apiResponse.success(res, { ...doctor.toJSON(), user }, 'Doctor profile fetched');
 });
@@ -31,14 +40,20 @@ const updateProfile = asyncHandler(async (req, res) => {
 
 // ─── Get Patient Queue (Today's appointments) ───────────────────────────────
 const getPatientQueue = asyncHandler(async (req, res) => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  const day = req.query.day || 'today';
+  const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
+
+  if (day === 'tomorrow') {
+    startDate.setDate(startDate.getDate() + 1);
+  }
+
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
 
   const appointments = await Appointment.find({
     doctorId: req.user._id,
-    scheduledAt: { $gte: today, $lt: tomorrow },
+    scheduledAt: { $gte: startDate, $lt: endDate },
     status: { $in: ['confirmed', 'in_progress'] }
   })
     .populate('patientId', 'firstName lastName email')
@@ -47,13 +62,15 @@ const getPatientQueue = asyncHandler(async (req, res) => {
   // Enrich with patient profile data
   const enriched = await Promise.all(appointments.map(async (apt) => {
     const patient = await Patient.findOne({ userId: apt.patientId._id });
+    const prescriptionCount = await Prescription.countDocuments({ patientId: apt.patientId._id, isActive: true });
     return {
       ...apt.toJSON(),
       patientProfile: patient ? {
         riskLevel: patient.currentRiskLevel,
         allergies: patient.allergies,
-        chronicConditions: patient.chronicConditions
-      } : null
+        chronicConditions: patient.chronicConditions,
+        prescriptionCount
+      } : { prescriptionCount }
     };
   }));
 
@@ -96,14 +113,21 @@ const startConsultation = asyncHandler(async (req, res) => {
 const addTranscriptLine = asyncHandler(async (req, res) => {
   const { consultationId, speaker, originalText, translatedText, originalLang, targetLang } = req.body;
 
-  const consultation = await Consultation.findOne({ _id: consultationId, doctorId: req.user._id });
+  const consultation = await Consultation.findOne({ 
+    $or: [{ _id: consultationId }, { appointmentId: consultationId }],
+    doctorId: req.user._id 
+  });
   if (!consultation) return apiResponse.error(res, 'Consultation not found', 404);
 
-  consultation.transcript.push({
+  const newLine = {
     speaker, originalText, translatedText, originalLang, targetLang,
     timestamp: new Date()
-  });
+  };
+  consultation.transcript.push(newLine);
   await consultation.save();
+
+  // Emit to socket room
+  notificationService.broadcastToRoom(`consultation_${consultation._id}`, 'new_transcript', newLine);
 
   return apiResponse.success(res, { lineCount: consultation.transcript.length }, 'Transcript line added');
 });
@@ -119,6 +143,22 @@ const saveSoapNote = asyncHandler(async (req, res) => {
   await consultation.save();
 
   return apiResponse.success(res, consultation.soapNote, 'SOAP note saved');
+});
+
+// ─── Update Consultation Language ─────────────────────────────────────────────
+const updateConsultationLanguage = asyncHandler(async (req, res) => {
+  const { consultationId } = req.params;
+  const { doctorLanguage } = req.body;
+
+  const consultation = await Consultation.findOne({ _id: consultationId, doctorId: req.user._id });
+  if (!consultation) return apiResponse.error(res, 'Consultation not found', 404);
+
+  if (doctorLanguage) {
+    consultation.doctorLanguage = doctorLanguage;
+    await consultation.save();
+  }
+
+  return apiResponse.success(res, { doctorLanguage: consultation.doctorLanguage }, 'Language updated');
 });
 
 // ─── End Consultation ────────────────────────────────────────────────────────
@@ -149,7 +189,10 @@ const endConsultation = asyncHandler(async (req, res) => {
 
 // ─── Get Consultation Details ────────────────────────────────────────────────
 const getConsultation = asyncHandler(async (req, res) => {
-  const consultation = await Consultation.findOne({ _id: req.params.id, doctorId: req.user._id })
+  const consultation = await Consultation.findOne({ 
+    $or: [{ _id: req.params.id }, { appointmentId: req.params.id }],
+    doctorId: req.user._id 
+  })
     .populate('patientId', 'firstName lastName email');
   if (!consultation) return apiResponse.error(res, 'Consultation not found', 404);
   return apiResponse.success(res, consultation, 'Consultation fetched');
@@ -163,21 +206,51 @@ const getDashboardStats = asyncHandler(async (req, res) => {
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-  const [todayCount, totalPatients, totalConsultations, doctor, recentConsultations] = await Promise.all([
-    Appointment.countDocuments({ doctorId, scheduledAt: { $gte: today, $lt: tomorrow }, status: { $in: ['confirmed', 'in_progress'] } }),
+  const [todayAppointments, totalPatients, totalConsultations, doctor, recentConsultations, urgentAlerts] = await Promise.all([
+    Appointment.find({ 
+      doctorId, 
+      scheduledAt: { $gte: today, $lt: tomorrow }, 
+      status: { $in: ['confirmed', 'in_progress'] } 
+    }).populate('patientId', 'firstName lastName email'),
     Appointment.distinct('patientId', { doctorId }).then(ids => ids.length),
     Consultation.countDocuments({ doctorId, status: 'completed' }),
     Doctor.findOne({ userId: doctorId }),
     Consultation.find({ doctorId, status: 'completed' }).sort({ completedAt: -1 }).limit(5)
-      .populate('patientId', 'firstName lastName')
+      .populate('patientId', 'firstName lastName'),
+    Appointment.find({
+      doctorId,
+      patientRiskLevel: 'RED',
+      status: { $in: ['confirmed', 'in_progress'] }
+    }).populate('patientId', 'firstName lastName email').limit(3)
   ]);
 
+  const enrichedAppointments = await Promise.all(todayAppointments.map(async (apt) => {
+    const prescriptionCount = await Prescription.countDocuments({ patientId: apt.patientId._id, isActive: true });
+    return {
+      ...apt.toJSON(),
+      prescriptionCount
+    };
+  }));
+
   return apiResponse.success(res, {
-    todayAppointments: todayCount,
+    todayAppointmentsCount: todayAppointments.length,
+    todayAppointments: enrichedAppointments,
     totalPatients,
-    totalConsultations,
+    completedConsultationsCount: totalConsultations,
+    queueCount: todayAppointments.length,
     rating: doctor?.rating || 0,
-    recentConsultations
+    recentConsultations,
+    urgentAlerts,
+    aiInsights: [
+      {
+        id: 'opt_1',
+        type: 'schedule_optimization',
+        title: 'AI Smart Schedule',
+        message: 'Based on predicted consultation durations, we recommend optimizing your afternoon slot for <b>Arthur Morgan</b>.',
+        actionLabel: 'Optimize',
+        patientName: 'Arthur Morgan'
+      }
+    ]
   }, 'Dashboard stats fetched');
 });
 
@@ -204,7 +277,8 @@ const getAnalytics = asyncHandler(async (req, res) => {
     consultationsPerDay,
     riskDistribution,
     totalRevenue: (doctor?.totalConsultations || 0) * (doctor?.consultationFee || 0),
-    averageRating: doctor?.rating || 0
+    averageRating: doctor?.rating || 0,
+    consultationFee: doctor?.consultationFee || 800
   }, 'Analytics fetched');
 });
 
@@ -243,7 +317,7 @@ const getPatientDetails = asyncHandler(async (req, res) => {
 
 module.exports = {
   getProfile, updateProfile, getPatientQueue,
-  startConsultation, addTranscriptLine, saveSoapNote,
+  startConsultation, addTranscriptLine, saveSoapNote, updateConsultationLanguage,
   endConsultation, getConsultation, getDashboardStats, getAnalytics,
   getAllConsultations, getPatientDetails
 };

@@ -20,6 +20,12 @@ const broadcastToRole = (role, event, data) => {
   }
 };
 
+const broadcastToRoom = (room, event, data) => {
+  if (io) {
+    io.to(room).emit(event, data);
+  }
+};
+
 const sendNotification = (userId, message, type = 'info') => {
   sendToUser(userId, 'notification', {
     id: Date.now(),
@@ -29,9 +35,13 @@ const sendNotification = (userId, message, type = 'info') => {
   });
 };
 
+const getIo = () => io;
+
 module.exports = {
   init,
   sendToUser,
   broadcastToRole,
-  sendNotification
+  broadcastToRoom,
+  sendNotification,
+  getIo
 };

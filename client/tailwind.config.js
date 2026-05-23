@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -8,22 +9,22 @@ export default {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#003d9b',
-          container: '#0052cc',
-          fixed: '#dae2ff',
+          DEFAULT: '#4f46e5', // Indigo 600
+          container: '#6366f1',
+          fixed: '#e0e7ff',
           on: '#ffffff',
-          'on-container': '#c4d2ff'
+          'on-container': '#312e81'
         },
         secondary: {
-          DEFAULT: '#00687b',
-          container: '#50dcff',
-          fixed: '#afecff',
+          DEFAULT: '#0ea5e9', // Sky 500
+          container: '#38bdf8',
+          fixed: '#e0f2fe',
           on: '#ffffff',
-          'on-container': '#005f71'
+          'on-container': '#0c4a6e'
         },
         tertiary: {
-          DEFAULT: '#7b2600',
-          container: '#a33500',
+          DEFAULT: '#f43f5e', // Rose 500
+          container: '#fb7185',
           on: '#ffffff'
         },
         surface: {
@@ -51,6 +52,11 @@ export default {
           DEFAULT: '#ba1a1a',
           container: '#ffdad6',
           on: '#ffffff'
+        },
+        doctor: {
+          DEFAULT: '#4f46e5', // Same as primary
+          dark: '#4338ca',
+          light: '#6366f1'
         }
       },
       fontFamily: {
@@ -75,6 +81,9 @@ export default {
         'lg': '48px',
         'xl': '80px',
         'gutter': '24px',
+      },
+      maxWidth: {
+        'container-max': '1440px',
       }
     },
   },

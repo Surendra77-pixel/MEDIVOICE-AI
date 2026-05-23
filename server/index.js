@@ -19,6 +19,7 @@ const doctorRoutes = require('./routes/doctorRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const prescriptionRoutes = require('./routes/prescriptionRoutes');
 const reminderRoutes = require('./routes/reminderRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 const notificationService = require('./services/notificationService');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -27,7 +28,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: '*',
     methods: ['GET', 'POST']
   }
 });
@@ -38,6 +39,20 @@ connectDB();
 // Initialize Services
 notificationService.init(io);
 
+// Socket Connection Handling
+io.on('connection', (socket) => {
+  logger.info(`New socket connected: ${socket.id}`);
+  
+  socket.on('join_consultation', (consultationId) => {
+    socket.join(`consultation_${consultationId}`);
+    logger.info(`Socket ${socket.id} joined room consultation_${consultationId}`);
+  });
+
+  socket.on('disconnect', () => {
+    logger.info(`Socket disconnected: ${socket.id}`);
+  });
+});
+
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: {
@@ -46,7 +61,7 @@ app.use(helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https://*.openstreetmap.org", "https://*.tile.osm.org"],
-      connectSrc: ["'self'", "https://api-inference.huggingface.co", "https://*.tile.osm.org"],
+      connectSrc: ["'self'", "https://router.huggingface.co", "https://api-inference.huggingface.co", "https://*.tile.osm.org"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
@@ -55,7 +70,9 @@ app.use(helmet({
 }));
 app.use(compression());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: function (origin, callback) {
+    callback(null, true);
+  },
   credentials: true
 }));
 app.use(express.json());
@@ -79,6 +96,7 @@ app.use('/api/v1/doctor', doctorRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/prescriptions', prescriptionRoutes);
 app.use('/api/v1/reminders', reminderRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // Health Check
 app.get('/health', (req, res) => {
@@ -116,6 +134,25 @@ io.on('connection', (socket) => {
     logger.info(`Client disconnected: ${socket.id}`);
   });
 });
+
+// Serve static assets in production
+if (process.env.NODE_ENV === 'production') {
+  const path = require('path');
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+  app.get(/.*/, (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+} else {
+  // Friendly message for root in development
+  app.get('/', (req, res) => {
+    res.status(200).json({
+      message: 'MediVoice AI API Server is running in development mode',
+      frontendDevServer: 'http://localhost:5173',
+      apiRoot: '/api/v1',
+      healthCheck: '/health'
+    });
+  });
+}
 
 // Global Error Handler
 app.use(errorHandler);

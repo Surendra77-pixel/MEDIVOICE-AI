@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const {
   getProfile, updateProfile, getPatientQueue,
-  startConsultation, addTranscriptLine, saveSoapNote,
+  startConsultation, addTranscriptLine, saveSoapNote, updateConsultationLanguage,
   endConsultation, getConsultation, getDashboardStats, getAnalytics,
   getAllConsultations, getPatientDetails
 } = require('../controllers/doctorController');
@@ -21,6 +21,7 @@ router.get('/consultations', getAllConsultations);
 router.post('/consultation/start', startConsultation);
 router.post('/consultation/transcript', addTranscriptLine);
 router.post('/consultation/soap', saveSoapNote);
+router.patch('/consultation/:consultationId/language', updateConsultationLanguage);
 router.patch('/consultation/:consultationId/end', endConsultation);
 router.get('/consultation/:id', getConsultation);
 router.get('/patient/:patientId', getPatientDetails);

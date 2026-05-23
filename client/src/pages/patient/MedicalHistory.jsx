@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../services/api.js';
 import { useTranslation } from '../../hooks/useTranslation';
 import { toast } from 'react-hot-toast';
+import CustomSelect from '../../components/common/CustomSelect';
 
 const MedicalHistory = () => {
   const [records, setRecords] = useState([]);
@@ -11,6 +12,29 @@ const MedicalHistory = () => {
   const [targetLang, setTargetLang] = useState('hi');
   const [translatedRecords, setTranslatedRecords] = useState({});
   const { translate, isTranslating } = useTranslation();
+  const [reportContents, setReportContents] = useState({});
+  const [loadingReportContent, setLoadingReportContent] = useState({});
+
+  useEffect(() => {
+    if (!expandedId) return;
+    const record = records.find(r => r._id === expandedId);
+    if (record && record.isReport && !reportContents[expandedId]) {
+      const fetchReport = async () => {
+        setLoadingReportContent(prev => ({ ...prev, [expandedId]: true }));
+        try {
+          const res = await api.get(`/ai/reports/${record.filename}`);
+          if (res.data.success) {
+            setReportContents(prev => ({ ...prev, [expandedId]: res.data.data.content }));
+          }
+        } catch (err) {
+          console.error("Failed to fetch report content:", err);
+        } finally {
+          setLoadingReportContent(prev => ({ ...prev, [expandedId]: false }));
+        }
+      };
+      fetchReport();
+    }
+  }, [expandedId, records, reportContents]);
 
   const handleTranslateRecord = async (recordId, content) => {
     if (translatedRecords[recordId]) {
@@ -142,12 +166,12 @@ const MedicalHistory = () => {
                           <div className="flex flex-wrap gap-sm mt-xs">
                             <span className="flex items-center gap-xs text-xs font-bold text-on-surface-variant/80">
                               <span className="material-symbols-outlined text-sm">medical_information</span>
-                              Dr. {record.doctorId?.firstName} {record.doctorId?.lastName}
+                              {record.isReport ? 'MediVoice AI Translator' : `Dr. ${record.doctorId?.firstName} ${record.doctorId?.lastName}`}
                             </span>
                             <span className="text-on-surface-variant/20">•</span>
                             <span className="flex items-center gap-xs text-xs font-bold text-on-surface-variant/80">
                               <span className="material-symbols-outlined text-sm">specialized_care</span>
-                              Medical Specialist
+                              {record.isReport ? 'Voice AI Assistant' : 'Medical Specialist'}
                             </span>
                           </div>
                         </div>
@@ -157,9 +181,11 @@ const MedicalHistory = () => {
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-sm">
-                      {record.soapNote && (
+                      {record.isReport ? (
+                        <span className="bg-secondary/10 text-secondary px-3 py-1 rounded-full text-[10px] font-bold border border-secondary/20 uppercase tracking-widest animate-fade-in">Saved Report</span>
+                      ) : record.soapNote ? (
                         <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-[10px] font-bold border border-primary/20 uppercase tracking-widest">AI Summarized</span>
-                      )}
+                      ) : null}
                       <button 
                         onClick={() => toggleExpand(record._id)}
                         className="text-primary font-bold text-sm flex items-center gap-xs hover:underline transition-all"
@@ -172,83 +198,122 @@ const MedicalHistory = () => {
 
                   {/* Expanded Section */}
                   {isExpanded && (
-                    <div className="mt-lg pt-lg border-t border-outline-variant/30 grid grid-cols-1 lg:grid-cols-3 gap-lg animate-slide-down">
-                      <div className="lg:col-span-2 space-y-md">
-                        <div className="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/30 relative">
-                          <div className="flex justify-between items-center mb-sm">
-                            <h4 className="text-[10px] font-bold uppercase text-primary tracking-widest">Clinical AI Assessment (SOAP)</h4>
-                            <div className="flex items-center gap-2">
-                              <select 
-                                value={targetLang}
-                                onChange={(e) => setTargetLang(e.target.value)}
-                                className="bg-transparent border-none text-[10px] font-bold text-on-surface-variant uppercase cursor-pointer hover:text-primary transition-colors focus:ring-0"
-                              >
-                                <option value="hi">Hindi</option>
-                                <option value="ta">Tamil</option>
-                                <option value="te">Telugu</option>
-                                <option value="ml">Malayalam</option>
-                                <option value="kn">Kannada</option>
-                                <option value="bn">Bengali</option>
-                              </select>
+                    <div className="mt-lg pt-lg border-t border-outline-variant/30 animate-fade-in">
+                      {record.isReport ? (
+                        <div className="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/30 flex flex-col gap-md">
+                          <div className="flex justify-between items-center pb-2 border-b border-outline-variant/10">
+                            <span className="text-xs font-black uppercase text-primary dark:text-sky-400 tracking-wider flex items-center gap-2">
+                              <span className="material-symbols-outlined text-lg">description</span>
+                              Voice Translation Session Report
+                            </span>
+                            <span className="text-xs font-bold text-on-surface-variant dark:text-gray-400 font-mono">
+                              {record.filename}
+                            </span>
+                          </div>
+
+                          {loadingReportContent[record._id] ? (
+                            <div className="flex justify-center items-center py-10">
+                              <span className="material-symbols-outlined animate-spin text-2xl text-primary">sync</span>
+                            </div>
+                          ) : reportContents[record._id] ? (
+                            <pre className="bg-black/5 dark:bg-black/35 border border-outline-variant/10 rounded-2xl p-md text-xs font-mono overflow-auto dark:text-green-400 text-slate-800 leading-relaxed max-h-[360px] custom-scrollbar whitespace-pre-wrap">
+                              {reportContents[record._id]}
+                            </pre>
+                          ) : (
+                            <p className="text-xs text-red-500 italic py-4">Failed to load report contents.</p>
+                          )}
+
+                          <div className="flex justify-end mt-sm">
+                            <button 
+                              onClick={() => handleExportRecord(record)}
+                              className="bg-white hover:bg-surface-container-high text-on-surface px-6 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-outline-variant/30 shadow-sm uppercase tracking-wider"
+                            >
+                              <span className="material-symbols-outlined text-lg">print</span>
+                              Print / Export Report
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-lg">
+                          <div className="lg:col-span-2 space-y-md">
+                            <div className="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/30 relative">
+                              <div className="flex justify-between items-center mb-sm">
+                                <h4 className="text-[10px] font-bold uppercase text-primary tracking-widest">Clinical AI Assessment (SOAP)</h4>
+                                <div className="flex items-center gap-2">
+                                  <CustomSelect 
+                                    value={targetLang}
+                                    onChange={setTargetLang}
+                                    options={[
+                                      { code: 'hi', label: 'Hindi' },
+                                      { code: 'ta', label: 'Tamil' },
+                                      { code: 'te', label: 'Telugu' },
+                                      { code: 'ml', label: 'Malayalam' },
+                                      { code: 'kn', label: 'Kannada' },
+                                      { code: 'bn', label: 'Bengali' }
+                                    ]}
+                                    className="w-32 text-xs"
+                                  />
+                                  <button 
+                                    onClick={() => handleTranslateRecord(record._id, record.soapNote?.assessment?.probableDiagnosis || record.soapNote?.subjective?.chiefComplaint)}
+                                    className={`flex items-center gap-1 text-[10px] font-bold uppercase transition-all ${translatedRecords[record._id] ? 'text-secondary' : 'text-primary hover:scale-105'}`}
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">{translatedRecords[record._id] ? 'history' : 'translate'}</span>
+                                    {translatedRecords[record._id] ? 'Show Original' : 'Translate'}
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {translatedRecords[record._id] && (
+                                <div className="mb-md p-sm bg-secondary/5 rounded-lg border border-secondary/20 animate-fade-in">
+                                  <p className="text-[10px] font-bold text-secondary uppercase mb-xs tracking-tighter">AI Translation ({targetLang})</p>
+                                  <p className="text-xs text-on-surface italic font-medium leading-relaxed">"{translatedRecords[record._id]}"</p>
+                                </div>
+                              )}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+                                <div>
+                                  <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-tighter">Subjective</p>
+                                  <p className="text-xs text-on-surface leading-relaxed">{record.soapNote?.subjective?.chiefComplaint || 'No subjective data recorded.'}</p>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-tighter">Objective</p>
+                                  <p className="text-xs text-on-surface leading-relaxed">{record.soapNote?.objective?.doctorObservations?.[0] || 'No objective measurements recorded.'}</p>
+                                </div>
+                                <div className="md:col-span-2 mt-2 pt-2 border-t border-outline-variant/10">
+                                  <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-tighter">Plan</p>
+                                  <p className="text-xs text-on-surface leading-relaxed font-medium">{record.soapNote?.plan?.followUpInstructions || 'Follow-up plan pending.'}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="space-y-md">
+                            <div className="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/30">
+                              <h4 className="text-[10px] font-bold uppercase text-primary mb-sm tracking-widest">Digital Prescription</h4>
+                              {record.prescriptionId && record.prescriptionId.medications && record.prescriptionId.medications.length > 0 ? (
+                                <div className="space-y-3">
+                                  {record.prescriptionId.medications.map((med, idx) => (
+                                    <div key={idx} className="mb-2 pb-2 border-b border-outline-variant/10 last:border-0 last:mb-0 last:pb-0">
+                                      <p className="font-bold text-sm text-on-surface">{med.drugName}</p>
+                                      <div className="flex justify-between items-center text-xs text-on-surface-variant font-medium mt-1">
+                                        <span>Dosage: {med.dose || '-'}</span>
+                                        <span>{med.frequency || '-'}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className="text-xs text-on-surface-variant italic">No prescriptions issued for this session.</p>
+                              )}
                               <button 
-                                onClick={() => handleTranslateRecord(record._id, record.soapNote?.assessment?.probableDiagnosis || record.soapNote?.subjective?.chiefComplaint)}
-                                className={`flex items-center gap-1 text-[10px] font-bold uppercase transition-all ${translatedRecords[record._id] ? 'text-secondary' : 'text-primary hover:scale-105'}`}
+                                onClick={() => handleExportRecord(record)}
+                                className="w-full mt-lg bg-white hover:bg-surface-container-high text-on-surface py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-outline-variant/30 shadow-sm uppercase tracking-wider"
                               >
-                                <span className="material-symbols-outlined text-[14px]">{translatedRecords[record._id] ? 'history' : 'translate'}</span>
-                                {translatedRecords[record._id] ? 'Show Original' : 'Translate'}
+                                <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
+                                Export Record
                               </button>
                             </div>
                           </div>
-                          
-                          {translatedRecords[record._id] && (
-                            <div className="mb-md p-sm bg-secondary/5 rounded-lg border border-secondary/20 animate-fade-in">
-                              <p className="text-[10px] font-bold text-secondary uppercase mb-xs tracking-tighter">AI Translation ({targetLang})</p>
-                              <p className="text-xs text-on-surface italic font-medium leading-relaxed">"{translatedRecords[record._id]}"</p>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
-                            <div>
-                              <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-tighter">Subjective</p>
-                              <p className="text-xs text-on-surface leading-relaxed">{record.soapNote?.subjective?.chiefComplaint || 'No subjective data recorded.'}</p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-tighter">Objective</p>
-                              <p className="text-xs text-on-surface leading-relaxed">{record.soapNote?.objective?.doctorObservations?.[0] || 'No objective measurements recorded.'}</p>
-                            </div>
-                            <div className="md:col-span-2 mt-2 pt-2 border-t border-outline-variant/10">
-                              <p className="text-[10px] font-bold text-on-surface-variant uppercase mb-xs tracking-tighter">Plan</p>
-                              <p className="text-xs text-on-surface leading-relaxed font-medium">{record.soapNote?.plan?.followUpInstructions || 'Follow-up plan pending.'}</p>
-                            </div>
-                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-md">
-                        <div className="bg-surface-container-low/50 p-md rounded-xl border border-outline-variant/30">
-                          <h4 className="text-[10px] font-bold uppercase text-primary mb-sm tracking-widest">Digital Prescription</h4>
-                          {record.prescriptionId && record.prescriptionId.medications && record.prescriptionId.medications.length > 0 ? (
-                            <div className="space-y-3">
-                              {record.prescriptionId.medications.map((med, idx) => (
-                                <div key={idx} className="mb-2 pb-2 border-b border-outline-variant/10 last:border-0 last:mb-0 last:pb-0">
-                                  <p className="font-bold text-sm text-on-surface">{med.drugName}</p>
-                                  <div className="flex justify-between items-center text-xs text-on-surface-variant font-medium mt-1">
-                                    <span>Dosage: {med.dose || '-'}</span>
-                                    <span>{med.frequency || '-'}</span>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-xs text-on-surface-variant italic">No prescriptions issued for this session.</p>
-                          )}
-                          <button 
-                            onClick={() => handleExportRecord(record)}
-                            className="w-full mt-lg bg-white hover:bg-surface-container-high text-on-surface py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all border border-outline-variant/30 shadow-sm uppercase tracking-wider"
-                          >
-                            <span className="material-symbols-outlined text-lg">picture_as_pdf</span>
-                            Export Record
-                          </button>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>

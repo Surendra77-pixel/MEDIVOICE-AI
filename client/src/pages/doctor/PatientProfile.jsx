@@ -4,7 +4,7 @@ import api from '../../services/api';
 import { toast } from 'react-hot-toast';
 import { 
   User, Activity, FileText, Pill, Calendar, 
-  ArrowLeft, Phone, Mail, Droplet, Weight, Ruler 
+  ArrowLeft, Phone, Mail, Droplet, Weight, Ruler, ChevronRight 
 } from 'lucide-react';
 
 const PatientProfile = () => {
@@ -12,6 +12,7 @@ const PatientProfile = () => {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [selectedNote, setSelectedNote] = useState(null);
 
   useEffect(() => {
     const fetchPatientDetails = async () => {
@@ -73,7 +74,12 @@ const PatientProfile = () => {
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-gray-900">{user?.firstName} {user?.lastName}</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-2xl font-bold text-gray-900">{user?.firstName} {user?.lastName}</h2>
+                  <span className="px-3 py-1 bg-doctor text-white text-[10px] font-black rounded-full shadow-lg shadow-blue-100 flex items-center gap-1">
+                    <Pill className="h-3 w-3" /> {prescriptions?.length || 0} TOTAL RX
+                  </span>
+                </div>
                 <p className="text-gray-500">Patient ID: #{user?._id?.slice(-6).toUpperCase()}</p>
               </div>
             </div>
@@ -159,21 +165,24 @@ const PatientProfile = () => {
                 <div className="text-center py-6 text-gray-500 text-sm">No past consultations found.</div>
               ) : (
                 pastConsultations?.slice(0, 3).map(consult => (
-                  <div key={consult._id} className="p-4 rounded-xl border border-gray-100 hover:border-blue-100 hover:bg-blue-50/50 transition-colors">
+                  <div key={consult._id} className="p-4 rounded-xl border border-gray-100 hover:border-doctor/20 hover:bg-blue-50/20 transition-all group">
                     <div className="flex justify-between items-start mb-2">
                       <p className="font-bold text-gray-900">
-                        {consult.soapNote?.assessment?.probableDiagnosis || 'Follow up visit'}
+                        {consult.soapNote?.assessment?.probableDiagnosis || 'Routine Consultation'}
                       </p>
-                      <span className="text-xs text-gray-500">
-                        {new Date(consult.completedAt).toLocaleDateString()}
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <Calendar className="h-3 w-3" /> {consult.completedAt ? new Date(consult.completedAt).toLocaleDateString() : 'N/A'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {consult.soapNote?.subjective || 'No notes available'}
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                      {consult.soapNote?.subjective?.chiefComplaint || 'Follow-up visit regarding previous symptoms.'}
                     </p>
-                    <div className="mt-3 text-xs font-semibold text-doctor flex items-center gap-1 cursor-pointer hover:underline">
-                      View Full SOAP Note &rarr;
-                    </div>
+                    <button 
+                      onClick={() => setSelectedNote(consult)}
+                      className="text-[10px] font-black text-doctor uppercase tracking-widest flex items-center gap-1 hover:gap-2 transition-all"
+                    >
+                      View Clinical Summary <ChevronRight className="h-3 w-3" />
+                    </button>
                   </div>
                 ))
               )}
@@ -185,30 +194,84 @@ const PatientProfile = () => {
                 <Pill className="h-5 w-5 text-doctor" /> Active Prescriptions
               </h3>
               <div className="space-y-3">
-              {prescriptions?.length === 0 ? (
+               {prescriptions?.length === 0 ? (
                 <div className="text-center py-6 text-gray-500 text-sm">No active prescriptions.</div>
               ) : (
-                prescriptions?.map(rx => (
-                  <div key={rx._id} className="p-4 rounded-xl border border-gray-100 flex items-center justify-between">
-                    <div>
-                       <div className="font-bold text-gray-900">{rx.medicationDetails?.drugName || 'Unknown Drug'}</div>
-                       <div className="text-sm text-gray-600 mt-1">
-                         {rx.medicationDetails?.dosage} • {rx.medicationDetails?.frequency} • {rx.medicationDetails?.duration}
-                       </div>
+                <div className="space-y-4">
+                  {prescriptions?.map(rx => (
+                    <div key={rx._id} className="space-y-2">
+                      {rx.medications?.map((med, idx) => (
+                        <div key={`${rx._id}-${idx}`} className="p-4 rounded-xl border border-gray-100 flex items-center justify-between bg-white hover:border-doctor/20 transition-colors">
+                          <div>
+                            <div className="font-bold text-gray-900">{med.drugName}</div>
+                            <div className="text-sm text-gray-600 mt-1">
+                              {med.dose} • {med.frequency} • {med.duration}
+                            </div>
+                            {med.instructions && (
+                              <p className="text-[10px] text-doctor font-bold mt-1 uppercase tracking-wider italic">
+                                Note: {med.instructions}
+                              </p>
+                            )}
+                          </div>
+                          <span className="px-2 py-1 bg-green-50 text-green-700 rounded text-[10px] font-black border border-green-100 uppercase">
+                            {med.route}
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                    {rx.medicationDetails?.isRefillable && (
-                      <span className="px-2 py-1 bg-green-50 text-green-700 rounded text-xs font-bold border border-green-100">
-                        Refillable
-                      </span>
-                    )}
-                  </div>
-                ))
+                  ))}
+                </div>
               )}
             </div>
           </div>
 
         </div>
       </div>
+
+      {/* Note Detail Modal */}
+      {selectedNote && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-slide-up">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-doctor text-white">
+              <div>
+                <h3 className="text-xl font-bold">{user?.firstName} {user?.lastName}</h3>
+                <p className="text-sm opacity-80">Consultation Date: {selectedNote.completedAt ? new Date(selectedNote.completedAt).toLocaleDateString() : 'N/A'}</p>
+              </div>
+              <button 
+                onClick={() => setSelectedNote(null)}
+                className="p-2 hover:bg-white/10 rounded-full transition-all"
+              >
+                <ChevronRight className="h-6 w-6 rotate-90" />
+              </button>
+            </div>
+            
+            <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
+              {[
+                { label: 'Subjective', data: selectedNote.soapNote?.subjective?.chiefComplaint },
+                { label: 'Objective', data: selectedNote.soapNote?.objective?.doctorObservations?.[0] },
+                { label: 'Assessment', data: selectedNote.soapNote?.assessment?.probableDiagnosis },
+                { label: 'Plan', data: selectedNote.soapNote?.plan?.followUpInstructions }
+              ].map(section => (
+                <div key={section.label} className="space-y-2">
+                  <h5 className="text-xs font-black uppercase tracking-widest text-doctor">{section.label}</h5>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-xl border border-gray-100 leading-relaxed">
+                    {section.data || 'No data recorded for this section.'}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-end">
+              <button 
+                onClick={() => setSelectedNote(null)}
+                className="px-6 py-2 bg-gray-900 text-white font-bold rounded-xl hover:bg-gray-800 transition-all active:scale-95"
+              >
+                Close Profile Note
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -6,13 +6,26 @@ const asyncHandler = require('../utils/asyncHandler');
 const createReminder = asyncHandler(async (req, res) => {
   const { prescriptionId, drugName, dose, instructions, scheduledTime, startDate, endDate } = req.body;
 
-  if (!prescriptionId || !drugName || !scheduledTime || !endDate) {
-    return apiResponse.error(res, 'prescriptionId, drugName, scheduledTime, and endDate are required', 400);
+  if (!drugName || !scheduledTime || !endDate) {
+    return apiResponse.error(res, 'drugName, scheduledTime, and endDate are required', 400);
   }
 
   const start = new Date(startDate || Date.now());
-  const end = new Date(endDate);
-  const daysTotal = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  let end = new Date(endDate);
+  
+  if (isNaN(end.getTime())) {
+    // Try parsing DD/MM/YYYY
+    const parts = String(endDate).split('/');
+    if (parts.length === 3) {
+      end = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+    }
+  }
+
+  if (isNaN(end.getTime())) {
+    return apiResponse.error(res, 'Invalid endDate format', 400);
+  }
+
+  const daysTotal = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60 * 24)));
 
   const reminder = await Reminder.create({
     patientId: req.user._id,

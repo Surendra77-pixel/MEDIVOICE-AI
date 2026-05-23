@@ -11,7 +11,6 @@ const ReminderSchema = new mongoose.Schema(
     prescriptionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Prescription',
-      required: [true, 'Prescription reference is required'],
     },
 
     // ── Medication Details ─────────────────────────────────────────────────

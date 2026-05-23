@@ -80,6 +80,10 @@ const UserSchema = new mongoose.Schema(
         message: 'Language must be one of the 6 supported Indian languages',
       },
     },
+    pushSubscription: {
+      type: Object,
+      default: null,
+    },
 
     // ── Security ───────────────────────────────────────────────────────────
     failedLoginAttempts: {

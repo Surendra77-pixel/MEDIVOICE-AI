@@ -84,12 +84,12 @@ const ConsultationSchema = new mongoose.Schema(
     patientLanguage: {
       type: String,
       default: 'hi',
-      enum: ['hi', 'ta', 'te', 'ml', 'kn', 'bn'],
+      enum: ['en', 'hi', 'ta', 'te', 'ml', 'kn', 'bn'],
     },
     doctorLanguage: {
       type: String,
-      default: 'hi',
-      enum: ['hi', 'ta', 'te', 'ml', 'kn', 'bn', 'en'],
+      default: 'en',
+      enum: ['en', 'hi', 'ta', 'te', 'ml', 'kn', 'bn'],
     },
 
     // ── Patient Consent (required before STT begins) ───────────────────────

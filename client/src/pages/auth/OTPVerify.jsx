@@ -42,6 +42,22 @@ const OTPVerify = () => {
     }
   };
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text/plain').slice(0, 6);
+    if (!/^\d+$/.test(pastedData)) return; // Ensure only numbers
+
+    const newCode = [...code];
+    for (let i = 0; i < pastedData.length; i++) {
+      if (i < 6) newCode[i] = pastedData[i];
+    }
+    setCode(newCode);
+
+    // Focus the next empty input or the last one
+    const focusIndex = Math.min(pastedData.length, 5);
+    document.getElementById(`otp-${focusIndex}`).focus();
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const otpCode = code.join('');
@@ -102,6 +118,7 @@ const OTPVerify = () => {
                 value={digit}
                 onChange={(e) => handleChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
+                onPaste={handlePaste}
               />
             ))}
           </div>

@@ -18,6 +18,20 @@ const SEED_CITIES = [
   'Hyderabad', 'Delhi', 'Goa', 'Puducherry',
 ];
 
+const FIRST_NAMES = [
+  'Arjun', 'Aarav', 'Aditya', 'Amit', 'Dev', 'Hari', 'Ishaan', 'Kabir', 'Krishna', 'Kunal',
+  'Manish', 'Nikhil', 'Pranav', 'Rahul', 'Rohan', 'Rohit', 'Sanjay', 'Siddharth', 'Varun', 'Vijay',
+  'Priya', 'Ananya', 'Divya', 'Kavita', 'Neha', 'Pooja', 'Riya', 'Shreya', 'Sneha', 'Deepa',
+  'Kiran', 'Meera', 'Ritu', 'Sunita', 'Swati', 'Geeta', 'Anjali', 'Preeti', 'Asha', 'Lata'
+];
+
+const LAST_NAMES = [
+  'Sharma', 'Verma', 'Gupta', 'Mehta', 'Nair', 'Iyer', 'Reddy', 'Patel', 'Joshi', 'Rao',
+  'Kumar', 'Singh', 'Sen', 'Das', 'Roy', 'Choudhury', 'Bose', 'Pillai', 'Menon', 'Prasad',
+  'Mishra', 'Pandey', 'Tripathi', 'Trivedi', 'Jha', 'Chatterjee', 'Banerjee', 'Mukherjee', 'Dutta', 'Ghosh',
+  'Naidu', 'Chowdary', 'Raju', 'Verma', 'Saxena', 'Srivastava', 'Dubey', 'Tiwari', 'Deshmukh', 'Kulkarni'
+];
+
 const seedDoctors = async () => {
   try {
     await connectDB();
@@ -28,13 +42,14 @@ const seedDoctors = async () => {
     await Doctor.deleteMany({ userId: { $in: doctorUserIds } });
     await User.deleteMany({ role: 'doctor' });
 
-    const doctorsToCreate = [];
+    let index = 0;
 
     for (const city of SEED_CITIES) {
       for (const specialty of SEED_SPECIALTIES) {
-        const firstName = `Dr. ${specialty.split(' ')[0]}`;
-        const lastName = city;
-        const email = `dr.${firstName.toLowerCase().replace(/[\s.]/g, '')}.${lastName.toLowerCase().replace(/\s/g, '')}@medivoice.dev`;
+        const firstName = FIRST_NAMES[index % FIRST_NAMES.length];
+        const lastName = LAST_NAMES[index % LAST_NAMES.length];
+        const email = `dr.${firstName.toLowerCase()}.${lastName.toLowerCase()}@medivoice.dev`;
+        index++;
 
         const user = new User({
           firstName,

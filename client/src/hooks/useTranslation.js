@@ -1,27 +1,27 @@
 import { useState, useCallback } from 'react';
-import api from '../services/api';
+import { translateText } from '../services/translateService';
 
 /**
  * useTranslation Hook
- * Interfaces with the backend AI service to translate text.
+ * Interfaces with the new translate service (LibreTranslate with Backend fallback).
  */
 export const useTranslation = () => {
   const [isTranslating, setIsTranslating] = useState(false);
   const [error, setError] = useState(null);
 
-  const translate = useCallback(async (text, targetLang) => {
+  const translate = useCallback(async (text, targetLang, sourceLang = 'en') => {
     if (!text || !targetLang) return text;
     
     setIsTranslating(true);
     setError(null);
 
     try {
-      const response = await api.post('/ai/translate', { text, targetLang });
-      return response.data.translatedText;
+      const translated = await translateText(text, sourceLang, targetLang);
+      return translated;
     } catch (err) {
-      console.error('Translation error:', err);
-      setError(err.response?.data?.message || 'Translation failed');
-      return text; // Fallback to original text
+      console.error('Translation Hook Error:', err);
+      setError(err.message);
+      return text;
     } finally {
       setIsTranslating(false);
     }

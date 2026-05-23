@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import { ROUTES } from './constants/routes';
 import { ROLES } from './constants/roles';
 
@@ -19,6 +20,9 @@ const Register = lazy(() => import('./pages/auth/Register'));
 const OTPVerify = lazy(() => import('./pages/auth/OTPVerify'));
 const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
+
+// Common Pages
+const LiveTranslator = lazy(() => import('./pages/common/LiveTranslator'));
 
 // Patient Pages
 const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard'));
@@ -57,7 +61,8 @@ const LoadingSpinner = () => (
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <SocketProvider>
+        <Router>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             {/* Public Routes */}
@@ -108,6 +113,7 @@ function App() {
               <Route path="history" element={<MedicalHistory />} />
               <Route path="prescriptions" element={<Prescriptions />} />
               <Route path="reminders" element={<Reminders />} />
+              <Route path="translator" element={<LiveTranslator />} />
             </Route>
 
             {/* Doctor Routes */}
@@ -130,6 +136,7 @@ function App() {
               <Route path="assistant" element={<DoctorAssistant />} />
               <Route path="analytics" element={<DoctorAnalytics />} />
               <Route path="patient/:id" element={<PatientProfile />} />
+              <Route path="translator" element={<LiveTranslator />} />
             </Route>
 
             {/* Admin Routes */}
@@ -152,6 +159,7 @@ function App() {
         </Suspense>
         <Toaster position="top-right" />
       </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }
