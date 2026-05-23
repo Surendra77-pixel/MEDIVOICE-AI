@@ -14,13 +14,15 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-// Verify connection configuration
-transporter.verify((error, success) => {
-  if (error) {
-    logger.error(`Email server connection error: ${error.message}`);
-  } else {
-    logger.info('Email server is ready to take our messages');
-  }
-});
+// Diagnostic verify only in development/non-Vercel
+if (!process.env.VERCEL) {
+  transporter.verify((error, success) => {
+    if (error) {
+      logger.error(`Email server connection error: ${error.message}`);
+    } else {
+      logger.info('Email server is ready to take our messages');
+    }
+  });
+}
 
 module.exports = transporter;

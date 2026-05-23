@@ -23,9 +23,6 @@ const errorHandler = require('./middleware/errorHandler');
 // Initialize app
 const app = express();
 
-// Connect to Database (non-blocking for serverless)
-connectDB().catch(err => logger.error('Initial DB connection failed:', err.message));
-
 // Middleware
 app.use(helmet({
   contentSecurityPolicy: {
