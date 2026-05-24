@@ -35,7 +35,10 @@ const sendAndSaveOTP = async (email, type, userId = null) => {
     expiresAt
   });
 
-  await sendOTPEmail(email, rawOTP, type);
+  // Fire and forget email sending so it never blocks the API
+  sendOTPEmail(email, rawOTP, type).catch(err => {
+    console.error('Failed to send OTP email in background:', err.message);
+  });
 
   await SecurityLog.create({
     email,

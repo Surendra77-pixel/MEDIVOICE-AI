@@ -31,3 +31,5 @@ Thumbs.db
 # Server scratch scripts & local reports (dev-only)
 /server/scratch/
 /server/reports/
+
+MEDIVOIVE AI.worktrees/
