@@ -46,12 +46,20 @@ const PatientDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         const res = await api.get('/patient/dashboard');
-        setStats(res.data.data);
+        const dashboardData = res.data.data || {};
+        
+        // Merge smart reminders from localStorage (client-side state persistence)
+        const localReminders = JSON.parse(localStorage.getItem('smart_reminders') || '[]');
+        if (localReminders.length > 0) {
+          dashboardData.reminders = localReminders;
+        }
+        
+        setStats(dashboardData);
         
         // Register native browser medication reminders (Phase 2 Data Feature)
-        if (res.data.data?.reminders?.length > 0) {
+        if (dashboardData.reminders?.length > 0) {
           import('../../services/reminderService').then(({ setMedicationReminder }) => {
-            res.data.data.reminders.forEach(reminder => {
+            dashboardData.reminders.forEach(reminder => {
               if (reminder.status !== 'completed') {
                 setMedicationReminder(reminder.medicationName, reminder.time);
               }
@@ -74,6 +82,29 @@ const PatientDashboard = () => {
       </div>
     );
   }
+
+  const toggleReminder = (reminderId) => {
+    // Toggle in component state
+    setStats(prev => {
+      const newReminders = (prev.reminders || []).map(r => {
+        if (r._id === reminderId) {
+          return { ...r, status: r.status === 'completed' ? 'pending' : 'completed' };
+        }
+        return r;
+      });
+      return { ...prev, reminders: newReminders };
+    });
+
+    // Also toggle in localStorage
+    const localReminders = JSON.parse(localStorage.getItem('smart_reminders') || '[]');
+    const updatedLocal = localReminders.map(r => {
+      if (r._id === reminderId) {
+        return { ...r, status: r.status === 'completed' ? 'pending' : 'completed' };
+      }
+      return r;
+    });
+    localStorage.setItem('smart_reminders', JSON.stringify(updatedLocal));
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -346,13 +377,14 @@ const PatientDashboard = () => {
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   key={reminder._id} 
-                  className={`flex items-start gap-md p-base bg-surface-container-low dark:bg-white/5 rounded-xl border-l-4 border-y border-r border-y-transparent border-r-transparent dark:border-y-white/5 dark:border-r-white/5 shadow-inner hover:bg-surface-container-high dark:hover:bg-white/10 transition-colors ${reminder.status === 'completed' ? 'border-l-primary opacity-60' : 'border-l-secondary'}`}
+                  onClick={() => toggleReminder(reminder._id)}
+                  className={`flex items-start gap-md p-base bg-surface-container-low dark:bg-white/5 rounded-xl border-l-4 border-y border-r border-y-transparent border-r-transparent dark:border-y-white/5 dark:border-r-white/5 shadow-inner hover:bg-surface-container-high dark:hover:bg-white/10 transition-colors cursor-pointer ${reminder.status === 'completed' ? 'border-l-primary opacity-60' : 'border-l-secondary'}`}
                 >
                   <div className="pt-1">
                     <input 
                       readOnly
                       checked={reminder.status === 'completed'}
-                      className="rounded bg-transparent border-outline dark:border-gray-500 text-primary focus:ring-primary focus:ring-offset-gray-900 w-5 h-5 cursor-pointer" 
+                      className="rounded bg-transparent border-outline dark:border-gray-500 text-primary focus:ring-primary focus:ring-offset-gray-900 w-5 h-5 cursor-pointer pointer-events-none" 
                       type="checkbox"
                     />
                   </div>

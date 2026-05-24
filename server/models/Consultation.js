@@ -66,14 +66,14 @@ const ConsultationSchema = new mongoose.Schema(
     appointmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Appointment',
-      required: [true, 'Appointment reference is required'],
-      unique: true,
     },
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'Patient reference is required'],
     },
+    guestPatientName: { type: String },
+    guestAge: { type: Number },
+    guestGender: { type: String },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',

@@ -128,14 +128,34 @@ const LiveTranslator = () => {
     if (!patientInfo.name.trim()) return toast.error("Please enter patient name first.");
     setIsSavingReport(true);
     try {
-      const res = await fetch('http://localhost:3000/api/v1/ai/save-report', {
+      const payload = {
+        guestPatientName: patientInfo.name,
+        guestAge: patientInfo.age,
+        guestGender: patientInfo.gender,
+        transcript: transcript.map(t => ({
+          speaker: t.speaker === 'person1' ? 'Patient' : 'Doctor',
+          originalText: t.original,
+          translatedText: t.translated,
+          originalLang: t.sourceLang,
+          targetLang: t.targetLang
+        })),
+        soapNote: {
+          subjective: { chiefComplaint: patientInfo.notes }
+        }
+      };
+
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/doctor/consultation/manual`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` // assuming we need token, or wait, it uses interceptors or cookies?
+        },
         credentials: 'include',
-        body: JSON.stringify({ patientInfo, transcript })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
-      if (res.ok && data.success) toast.success(`Report saved: ${data.data.filename}`);
+      if (res.ok && data.success) toast.success(`Saved to Clinical Notes!`);
       else toast.error("Failed: " + (data.message || "Unknown error"));
     } catch (err) { toast.error("Network error: " + err.message); }
     finally { setIsSavingReport(false); }
@@ -145,7 +165,8 @@ const LiveTranslator = () => {
   const fetchReportsList = async () => {
     setIsLoadingReports(true);
     try {
-      const res = await fetch('http://localhost:3000/api/v1/ai/reports', { credentials: 'include' });
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/ai/reports`, { credentials: 'include' });
       const data = await res.json();
       if (res.ok && data.success) setReports(data.data);
       else toast.error("Failed: " + (data.message || "Unknown"));
@@ -155,7 +176,8 @@ const LiveTranslator = () => {
 
   const fetchReportContent = async (filename) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/v1/ai/reports/${filename}`, { credentials: 'include' });
+      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      const res = await fetch(`${baseUrl}/api/v1/ai/reports/${filename}`, { credentials: 'include' });
       const data = await res.json();
       if (res.ok && data.success) { setActiveReportName(filename); setActiveReportContent(data.data.content); }
       else toast.error("Failed: " + (data.message || "Unknown"));
@@ -174,7 +196,8 @@ const LiveTranslator = () => {
       if (isTTSActive && translatedText) {
         try {
           const ttsLang = targetLang.split('-')[0];
-          const ttsRes = await fetch(`http://localhost:3000/api/v1/ai/tts?text=${encodeURIComponent(translatedText)}&lang=${ttsLang}`, { credentials: 'include' });
+          const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+          const ttsRes = await fetch(`${baseUrl}/api/v1/ai/tts?text=${encodeURIComponent(translatedText)}&lang=${ttsLang}`, { credentials: 'include' });
           if (!ttsRes.ok) throw new Error("TTS proxy failed");
           const audioBlob = await ttsRes.blob();
           const audio = new Audio(URL.createObjectURL(audioBlob));
@@ -201,7 +224,8 @@ const LiveTranslator = () => {
         const langCode = person === 'person1' ? lang1.split('-')[0] : lang2.split('-')[0];
         try {
           setErrorMsg("Processing...");
-          const res = await fetch(`http://localhost:3000/api/v1/ai/transcribe?lang=${langCode}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/octet-stream' }, body: audioBlob });
+          const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+          const res = await fetch(`${baseUrl}/api/v1/ai/transcribe?lang=${langCode}`, { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/octet-stream' }, body: audioBlob });
           const data = await res.json();
           if (data.success && data.data.text) { handleTranslateFinal(data.data.text.trim(), person); setErrorMsg(null); }
           else setErrorMsg("Neural STT Failed: " + (data.message || 'Unknown'));

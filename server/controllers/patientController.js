@@ -9,6 +9,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const notificationService = require('../services/notificationService');
 const fs = require('fs');
 const path = require('path');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // ─── Get or Create Patient Profile ──────────────────────────────────────────
 const getProfile = asyncHandler(async (req, res) => {
@@ -342,6 +343,131 @@ const updateConsultationLanguage = asyncHandler(async (req, res) => {
   return apiResponse.success(res, { patientLanguage: consultation.patientLanguage }, 'Language updated');
 });
 
+// ─── AI Prescription Analysis (Gemini Vision) ──────────────────────────────
+const analyzePrescription = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    return apiResponse.error(res, 'No prescription image uploaded', 400);
+  }
+
+  // Force-reload .env to ensure the key is always fresh
+  require('dotenv').config({ override: true });
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    return apiResponse.error(res, 'Gemini API key not configured on server', 500);
+  }
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  // Convert uploaded buffer to base64 inline part
+  const base64Image = req.file.buffer.toString('base64');
+  const mimeType = req.file.mimetype || 'image/jpeg';
+
+  const prompt = `You are a medical AI assistant. Analyze this prescription image carefully.
+
+Extract ALL of the following information and return ONLY valid JSON (no markdown, no code fences, no extra text):
+
+{
+  "doctorName": "Full name of the prescribing doctor (or 'Unknown' if not visible)",
+  "doctorSpecialty": "Specialty if visible (or 'General Physician')",
+  "patientName": "Patient name if visible (or 'Not specified')",
+  "date": "Date on the prescription if visible (or today's date)",
+  "medications": [
+    {
+      "drugName": "Full medication name with strength (e.g., 'Amoxicillin 500mg')",
+      "dose": "Dosage per intake (e.g., '1 tablet', '5ml')",
+      "frequency": "How often (e.g., 'Twice daily', 'Every 8 hours')",
+      "duration": "For how long (e.g., '7 days', '1 month')"
+    }
+  ],
+  "diagnosis": "The condition or diagnosis if mentioned (or 'Not specified')",
+  "notes": "Any additional instructions or notes from the doctor"
+}
+
+Be thorough. Extract every single medication listed. If the handwriting is unclear, make your best medical interpretation.`;
+
+  // Fallback model chain — tries each model in order until one succeeds
+  const MODEL_CHAIN = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-2.0-flash-001'
+  ];
+
+  let lastError = null;
+  for (const modelName of MODEL_CHAIN) {
+    try {
+      console.log(`Trying Gemini model: ${modelName}`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent([
+        prompt,
+        { inlineData: { mimeType, data: base64Image } }
+      ]);
+
+      let rawText = result.response.text();
+
+      // Clean up any markdown code fences the model might add
+      rawText = rawText.replace(/```json\s*/gi, '').replace(/```\s*/gi, '').trim();
+
+      let parsed;
+      try {
+        parsed = JSON.parse(rawText);
+      } catch (parseErr) {
+        console.error(`Model ${modelName} response was not valid JSON:`, rawText);
+        // Try next model
+        lastError = new Error('AI could not parse the prescription clearly.');
+        continue;
+      }
+
+      console.log(`Success with model: ${modelName}`);
+
+      // ── Save to Database so it persists across logins ──────────────
+      const Prescription = require('../models/Prescription');
+      
+      const newPrescription = new Prescription({
+        patientId: req.user._id,
+        diagnosis: parsed.diagnosis || 'General Checkup',
+        doctorSnapshot: {
+          name: parsed.doctorName || 'Unknown Doctor',
+          specialty: parsed.doctorSpecialty || 'General Physician',
+        },
+        medications: (parsed.medications || []).map(m => ({
+          drugName: m.drugName,
+          dose: m.dose,
+          frequency: m.frequency,
+          duration: m.duration,
+          aiPrefilled: true
+        })),
+        generalInstructions: parsed.notes || '',
+        status: 'active'
+      });
+
+      const savedPrescription = await newPrescription.save();
+
+      // Return both the raw parsed data and the DB record ID
+      return apiResponse.success(res, { 
+        ...parsed, 
+        _dbId: savedPrescription._id 
+      }, 'Prescription analyzed and saved successfully');
+
+    } catch (err) {
+      const status = err?.status || (err?.message?.includes('503') ? 503 : 0);
+      console.warn(`Model ${modelName} failed (${status}): ${err.message}`);
+      lastError = err;
+      // Only retry on 503 (overloaded) or 429 (rate limit); fail fast on other errors
+      if (!err.message?.includes('503') && !err.message?.includes('429') && !err.message?.includes('overloaded') && !err.message?.includes('UNAVAILABLE')) {
+        break;
+      }
+      // Small delay before next model
+      await new Promise(r => setTimeout(r, 800));
+    }
+  }
+
+  const errMsg = lastError?.message?.includes('parse') 
+    ? 'AI could not parse the prescription. Please upload a clearer image.'
+    : 'All AI models are currently busy. Please try again in 30 seconds.';
+  return apiResponse.error(res, errMsg, 503);
+});
+
 module.exports = {
   getProfile,
   updateProfile,
@@ -354,5 +480,6 @@ module.exports = {
   getDashboardStats,
   getConsultation,
   addTranscriptLine,
-  updateConsultationLanguage
+  updateConsultationLanguage,
+  analyzePrescription
 };

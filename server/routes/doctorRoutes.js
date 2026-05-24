@@ -4,7 +4,7 @@ const {
   getProfile, updateProfile, getPatientQueue,
   startConsultation, addTranscriptLine, saveSoapNote, updateConsultationLanguage,
   endConsultation, getConsultation, getDashboardStats, getAnalytics,
-  getAllConsultations, getPatientDetails
+  getAllConsultations, getPatientDetails, saveManualNote
 } = require('../controllers/doctorController');
 const { protect } = require('../middleware/authMiddleware');
 const { authorize } = require('../middleware/roleMiddleware');
@@ -19,6 +19,7 @@ router.put('/profile', updateProfile);
 router.get('/queue', getPatientQueue);
 router.get('/consultations', getAllConsultations);
 router.post('/consultation/start', startConsultation);
+router.post('/consultation/manual', saveManualNote);
 router.post('/consultation/transcript', addTranscriptLine);
 router.post('/consultation/soap', saveSoapNote);
 router.patch('/consultation/:consultationId/language', updateConsultationLanguage);

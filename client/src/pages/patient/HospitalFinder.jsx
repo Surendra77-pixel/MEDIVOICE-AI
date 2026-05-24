@@ -118,7 +118,7 @@ const HospitalFinder = () => {
           return {
             id: el.id,
             name: el.tags.name,
-            address: [el.tags['addr:street'], el.tags['addr:city']].filter(Boolean).join(', ') || currentCity || cityName,
+            address: [el.tags['addr:street'], el.tags['addr:city']].filter(Boolean).join(', ') || cityName || currentCity || 'Local Area',
             phone: el.tags.phone || el.tags['contact:phone'] || null,
             website: el.tags.website || el.tags['contact:website'] || null,
             type: isClinic ? 'Clinic' : 'Hospital',
@@ -150,13 +150,31 @@ const HospitalFinder = () => {
     }
   };
 
+  // ── IP Geolocation Fallback ───────────────────────────────────────────────
+  const fetchIPLocation = async () => {
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      const data = await res.json();
+      if (data.latitude && data.longitude) {
+        setUserLocation([data.latitude, data.longitude]);
+        setCurrentCity(data.city || data.region || 'your area');
+        setSearchQuery(data.city || data.region || 'your area');
+        fetchHospitalsNear(data.latitude, data.longitude, data.city || data.region || 'your area');
+      } else {
+        throw new Error("No IP coords");
+      }
+    } catch (err) {
+      fetchHospitalsNear(28.6139, 77.2090, 'Delhi');
+    }
+  };
+
   // ── GPS Geolocation ────────────────────────────────────────────────────────
   const handleGeolocate = () => {
+    setLocating(true);
     if (!navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser.');
+      fetchIPLocation().finally(() => setLocating(false));
       return;
     }
-    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       async (pos) => {
         const { latitude, longitude } = pos.coords;
@@ -175,8 +193,8 @@ const HospitalFinder = () => {
         setLocating(false);
       },
       () => {
-        toast.error('Could not get your location. Please search manually.');
-        setLocating(false);
+        toast.error('GPS unavailable. Attempting network location...', { icon: '📡' });
+        fetchIPLocation().finally(() => setLocating(false));
       },
       { timeout: 8000 }
     );
@@ -205,6 +223,7 @@ const HospitalFinder = () => {
   };
 
   // ── Initial load with geolocation ─────────────────────────────────────────
+
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -214,7 +233,7 @@ const HospitalFinder = () => {
           try {
             const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
             const d = await r.json();
-            const city = d.address?.city || d.address?.town || 'Delhi';
+            const city = d.address?.city || d.address?.town || d.address?.village || 'your area';
             setCurrentCity(city);
             setSearchQuery(city);
             await fetchHospitalsNear(latitude, longitude, city);
@@ -222,10 +241,14 @@ const HospitalFinder = () => {
             fetchHospitalsNear(latitude, longitude, 'your area');
           }
         },
-        () => fetchHospitalsNear(28.6139, 77.2090, 'Delhi')
+        () => {
+          // Fallback to IP Geolocation if GPS is denied or times out
+          fetchIPLocation();
+        },
+        { timeout: 5000 }
       );
     } else {
-      fetchHospitalsNear(28.6139, 77.2090, 'Delhi');
+      fetchIPLocation();
     }
   }, []);
 
@@ -461,37 +484,35 @@ const HospitalFinder = () => {
 
                     {/* Action Buttons */}
                     <div className="flex gap-2">
-                      <button
-                        onClick={e => {
-                          e.stopPropagation();
-                          window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, '_blank');
-                        }}
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
                         className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white py-2.5 rounded-xl font-bold text-[10px] flex items-center justify-center gap-1.5 hover:brightness-110 active:scale-95 transition-all shadow-md shadow-indigo-500/20 uppercase tracking-wider"
                       >
                         <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>directions</span>
                         Get Directions
-                      </button>
+                      </a>
                       {h.phone && (
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            window.open(`tel:${h.phone}`);
-                          }}
-                          className="px-3 py-2.5 bg-white/5 border border-white/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 hover:border-cyan-500/40 transition-all active:scale-95"
+                        <a
+                          href={`tel:${h.phone}`}
+                          onClick={e => e.stopPropagation()}
+                          className="px-3 py-2.5 bg-white/5 border border-white/10 text-cyan-400 rounded-xl hover:bg-cyan-500/20 hover:border-cyan-500/40 transition-all active:scale-95 flex items-center justify-center"
                         >
                           <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>call</span>
-                        </button>
+                        </a>
                       )}
                       {h.website && (
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            window.open(h.website, '_blank');
-                          }}
-                          className="px-3 py-2.5 bg-white/5 border border-white/10 text-indigo-400 rounded-xl hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all active:scale-95"
+                        <a
+                          href={h.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="px-3 py-2.5 bg-white/5 border border-white/10 text-indigo-400 rounded-xl hover:bg-indigo-500/20 hover:border-indigo-500/40 transition-all active:scale-95 flex items-center justify-center"
                         >
                           <span className="material-symbols-outlined text-sm">open_in_new</span>
-                        </button>
+                        </a>
                       )}
                     </div>
                   </motion.div>
@@ -565,12 +586,14 @@ const HospitalFinder = () => {
                     </span>
                     {h.emergency && <span className="text-[9px] font-black px-2 py-0.5 rounded-full uppercase bg-red-100 text-red-700">Emergency</span>}
                   </div>
-                  <button
-                    onClick={() => window.open(`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`, '_blank')}
-                    className="mt-2 w-full bg-indigo-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${h.lat},${h.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 w-full block text-center bg-indigo-600 text-white py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors"
                   >
                     Get Directions →
-                  </button>
+                  </a>
                 </div>
               </Popup>
             </Marker>

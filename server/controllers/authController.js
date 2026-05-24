@@ -66,6 +66,10 @@ const verifySignup = asyncHandler(async (req, res) => {
     });
   }
 
+  // Seed initial data to populate the dashboard immediately
+  const seedNewUser = require('../utils/seedNewUser');
+  await seedNewUser(user);
+
   await sendWelcomeEmail(user.email, user.firstName, user.role);
 
   return apiResponse.success(res, null, 'Email verified successfully. You can now login.');
@@ -82,6 +86,11 @@ const login = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email }).select('+password');
   if (!user) {
     return apiResponse.error(res, 'Invalid credentials', 401);
+  }
+
+  // Ensure the user is logging into the correct portal
+  if (req.body.role && user.role !== req.body.role) {
+    return apiResponse.error(res, `Account exists but is registered as a ${user.role}. Please use the ${user.role} login portal.`, 403);
   }
 
   if (!user.isVerified) {

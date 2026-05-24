@@ -8,6 +8,11 @@ const ClinicalNotes = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNote, setSelectedNote] = useState(null);
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [newNote, setNewNote] = useState({
+    patientName: '', subjective: '', objective: '', assessment: '', plan: ''
+  });
+  const [savingNote, setSavingNote] = useState(false);
 
   useEffect(() => {
     const fetchNotes = async () => {
@@ -25,8 +30,35 @@ const ClinicalNotes = () => {
     fetchNotes();
   }, []);
 
+  const handleSaveManualNote = async () => {
+    if (!newNote.patientName.trim()) return toast.error("Patient Name is required");
+    setSavingNote(true);
+    try {
+      const payload = {
+        guestPatientName: newNote.patientName,
+        soapNote: {
+          subjective: { chiefComplaint: newNote.subjective },
+          objective: { doctorObservations: [newNote.objective] },
+          assessment: { probableDiagnosis: newNote.assessment },
+          plan: { followUpInstructions: newNote.plan }
+        }
+      };
+      const res = await api.post('/doctor/consultation/manual', payload);
+      if (res.data.success) {
+        toast.success("Manual Note Saved!");
+        setNotes([res.data.data, ...notes]);
+        setIsAddingNote(false);
+        setNewNote({ patientName: '', subjective: '', objective: '', assessment: '', plan: '' });
+      }
+    } catch (err) {
+      toast.error("Failed to save note");
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
   const filteredNotes = notes.filter(note => {
-    const patientName = `${note.patientId?.firstName} ${note.patientId?.lastName}`.toLowerCase();
+    const patientName = note.patientId ? `${note.patientId.firstName} ${note.patientId.lastName}`.toLowerCase() : (note.guestPatientName?.toLowerCase() || 'unknown patient');
     const diagnosis = note.soapNote?.assessment?.probableDiagnosis?.toLowerCase() || '';
     return patientName.includes(searchTerm.toLowerCase()) || diagnosis.includes(searchTerm.toLowerCase());
   });
@@ -49,9 +81,17 @@ const ClinicalNotes = () => {
             className="w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 rounded-xl focus:ring-doctor focus:border-doctor outline-none text-sm dark:text-white dark:placeholder-gray-500"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5">
-          <Filter className="h-4 w-4" /> Filter by Date
-        </button>
+        <div className="flex items-center gap-3">
+          <button className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 dark:border-white/10 rounded-xl text-sm font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-white/5">
+            <Filter className="h-4 w-4" /> Filter by Date
+          </button>
+          <button 
+            onClick={() => setIsAddingNote(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-doctor text-white rounded-xl text-sm font-bold hover:brightness-110 shadow-lg shadow-doctor/30 transition-all"
+          >
+            <ClipboardList className="h-4 w-4" /> Add Clinical Note
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4 min-h-[400px]">
@@ -76,7 +116,7 @@ const ClinicalNotes = () => {
               </div>
               <div className="flex-1">
                 <h4 className="font-bold text-gray-900 dark:text-white">
-                  {note.patientId?.firstName} {note.patientId?.lastName}
+                  {note.patientId ? `${note.patientId.firstName} ${note.patientId.lastName}` : (note.guestPatientName || 'Unknown Patient')}
                 </h4>
                 <div className="flex gap-4 mt-1">
                   <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
@@ -101,7 +141,7 @@ const ClinicalNotes = () => {
           <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-transparent dark:border-white/10 overflow-hidden animate-slide-up">
             <div className="p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-doctor text-white">
               <div>
-                <h3 className="text-xl font-bold">{selectedNote.patientId?.firstName} {selectedNote.patientId?.lastName}</h3>
+                <h3 className="text-xl font-bold">{selectedNote.patientId ? `${selectedNote.patientId.firstName} ${selectedNote.patientId.lastName}` : selectedNote.guestPatientName}</h3>
                 <p className="text-sm opacity-80">Consultation Date: {selectedNote.completedAt ? new Date(selectedNote.completedAt).toLocaleDateString() : 'N/A'}</p>
               </div>
               <button 
@@ -135,6 +175,70 @@ const ClinicalNotes = () => {
                 className="px-6 py-2 bg-gray-900 dark:bg-white/10 text-white dark:text-gray-300 font-bold rounded-xl hover:bg-gray-800 dark:hover:bg-white/20 border border-transparent dark:border-white/10 transition-all active:scale-95"
               >
                 Close Archive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Note Modal */}
+      {isAddingNote && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-3xl shadow-2xl dark:shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-transparent dark:border-white/10 overflow-hidden animate-slide-up flex flex-col max-h-[90vh]">
+            <div className="p-6 border-b border-gray-100 dark:border-white/10 flex justify-between items-center bg-doctor text-white shrink-0">
+              <h3 className="text-xl font-bold">New Clinical Note</h3>
+              <button 
+                onClick={() => setIsAddingNote(false)}
+                className="p-2 hover:bg-white/10 rounded-full transition-all"
+              >
+                <ChevronRight className="h-6 w-6 rotate-90" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
+              <div className="space-y-1">
+                <label className="text-xs font-black uppercase text-gray-500 dark:text-gray-400">Patient Name *</label>
+                <input 
+                  type="text" 
+                  value={newNote.patientName} 
+                  onChange={e => setNewNote({...newNote, patientName: e.target.value})}
+                  placeholder="e.g. John Doe"
+                  className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-doctor transition-all"
+                />
+              </div>
+
+              {[
+                { label: 'Subjective', key: 'subjective', placeholder: 'Patient symptoms and complaints...' },
+                { label: 'Objective', key: 'objective', placeholder: 'Doctor observations, vitals, lab results...' },
+                { label: 'Assessment', key: 'assessment', placeholder: 'Probable diagnosis...' },
+                { label: 'Plan', key: 'plan', placeholder: 'Prescriptions, advice, follow-up...' }
+              ].map(section => (
+                <div key={section.key} className="space-y-1">
+                  <label className="text-xs font-black uppercase text-doctor dark:text-indigo-300">{section.label}</label>
+                  <textarea 
+                    value={newNote[section.key]} 
+                    onChange={e => setNewNote({...newNote, [section.key]: e.target.value})}
+                    placeholder={section.placeholder}
+                    rows={3}
+                    className="w-full bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-gray-900 dark:text-white outline-none focus:border-doctor transition-all resize-none custom-scrollbar"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="p-6 bg-gray-50 dark:bg-white/5 border-t border-gray-100 dark:border-white/10 flex justify-end gap-3 shrink-0">
+              <button 
+                onClick={() => setIsAddingNote(false)}
+                className="px-6 py-2.5 text-gray-600 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSaveManualNote}
+                disabled={savingNote}
+                className="px-6 py-2.5 bg-doctor text-white font-bold rounded-xl hover:brightness-110 shadow-lg shadow-doctor/30 transition-all active:scale-95 disabled:opacity-50"
+              >
+                {savingNote ? 'Saving...' : 'Save Note'}
               </button>
             </div>
           </div>

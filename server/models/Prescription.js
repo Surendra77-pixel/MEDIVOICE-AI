@@ -44,8 +44,7 @@ const PrescriptionSchema = new mongoose.Schema(
     consultationId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Consultation',
-      required: [true, 'Consultation reference is required'],
-      unique: true,
+      sparse: true,
     },
     patientId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -55,7 +54,6 @@ const PrescriptionSchema = new mongoose.Schema(
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: [true, 'Doctor reference is required'],
     },
 
     // ── Clinical Content ───────────────────────────────────────────────────
@@ -88,8 +86,8 @@ const PrescriptionSchema = new mongoose.Schema(
 
     // ── Immutable Snapshots ────────────────────────────────────────────────
     doctorSnapshot: {
-      name: { type: String, required: true },
-      specialty: { type: String, required: true },
+      name: { type: String },
+      specialty: { type: String },
       qualifications: { type: [String] },
       registrationNumber: { type: String },
       clinicName: { type: String },
@@ -98,7 +96,7 @@ const PrescriptionSchema = new mongoose.Schema(
       phone: { type: String },
     },
     patientSnapshot: {
-      name: { type: String, required: true },
+      name: { type: String },
       age: { type: Number },
       gender: { type: String },
       dateOfBirth: { type: Date },

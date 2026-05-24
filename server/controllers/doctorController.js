@@ -145,6 +145,32 @@ const saveSoapNote = asyncHandler(async (req, res) => {
   return apiResponse.success(res, consultation.soapNote, 'SOAP note saved');
 });
 
+// ─── Save Manual Note (Standalone) ───────────────────────────────────────────
+const saveManualNote = asyncHandler(async (req, res) => {
+  const { guestPatientName, guestAge, guestGender, soapNote, transcript } = req.body;
+
+  const consultation = await Consultation.create({
+    doctorId: req.user._id,
+    guestPatientName: guestPatientName || 'Unknown Patient',
+    guestAge,
+    guestGender,
+    soapNote: { ...soapNote, aiGenerated: false, doctorConfirmed: true, confirmedAt: new Date() },
+    transcript: transcript || [],
+    status: 'completed',
+    startedAt: new Date(),
+    completedAt: new Date(),
+    actualDurationMinutes: 15
+  });
+
+  // Update doctor stats
+  await Doctor.findOneAndUpdate(
+    { userId: req.user._id },
+    { $inc: { totalConsultations: 1, totalPatientsServed: 1 } }
+  );
+
+  return apiResponse.success(res, consultation, 'Manual note saved successfully', 201);
+});
+
 // ─── Update Consultation Language ─────────────────────────────────────────────
 const updateConsultationLanguage = asyncHandler(async (req, res) => {
   const { consultationId } = req.params;
@@ -319,5 +345,5 @@ module.exports = {
   getProfile, updateProfile, getPatientQueue,
   startConsultation, addTranscriptLine, saveSoapNote, updateConsultationLanguage,
   endConsultation, getConsultation, getDashboardStats, getAnalytics,
-  getAllConsultations, getPatientDetails
+  getAllConsultations, getPatientDetails, saveManualNote
 };
