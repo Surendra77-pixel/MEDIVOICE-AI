@@ -1,7 +1,13 @@
 import axios from 'axios';
 
+// Ensure /api/v1 is properly appended if the user forgets it in Vercel
+let backendUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:3000/api/v1');
+if (backendUrl.includes('onrender.com') && !backendUrl.includes('/api/v1')) {
+  backendUrl = backendUrl.replace(/\/$/, '') + '/api/v1';
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:3000/api/v1'),
+  baseURL: backendUrl,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
