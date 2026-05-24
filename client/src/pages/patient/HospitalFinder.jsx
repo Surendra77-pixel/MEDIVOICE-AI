@@ -120,7 +120,11 @@ const HospitalFinder = () => {
             name: el.tags.name,
             address: [el.tags['addr:street'], el.tags['addr:city']].filter(Boolean).join(', ') || cityName || currentCity || 'Local Area',
             phone: el.tags.phone || el.tags['contact:phone'] || null,
-            website: el.tags.website || el.tags['contact:website'] || null,
+            website: (el.tags.website || el.tags['contact:website']) 
+              ? (/^https?:\/\//i.test(el.tags.website || el.tags['contact:website']) 
+                  ? (el.tags.website || el.tags['contact:website']) 
+                  : `https://${el.tags.website || el.tags['contact:website']}`) 
+              : null,
             type: isClinic ? 'Clinic' : 'Hospital',
             emergency: hasEmergency,
             open24h: el.tags.opening_hours === '24/7' || (!isClinic && seed < 4),
