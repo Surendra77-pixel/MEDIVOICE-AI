@@ -20,7 +20,7 @@ const signup = asyncHandler(async (req, res) => {
     return apiResponse.error(res, 'Email already registered', 400);
   }
 
-  // Create user (unverified)
+  // Create user (verified automatically to bypass SMTP issues)
   const user = await User.create({
     firstName,
     lastName,
@@ -28,13 +28,27 @@ const signup = asyncHandler(async (req, res) => {
     password,
     role,
     city,
-    isVerified: false
+    isVerified: true
   });
 
-  // Send OTP
-  await authService.sendAndSaveOTP(email, 'email_verify', user._id);
+  // Create Profile based on role
+  if (user.role === 'patient') {
+    await Patient.create({ userId: user._id });
+  } else if (user.role === 'doctor') {
+    await Doctor.create({ 
+      userId: user._id,
+      specialty: 'General Physician', 
+      qualifications: ['MBBS'], 
+      city: user.city || 'Hyderabad'
+    });
+  }
 
-  return apiResponse.success(res, null, 'OTP sent to your email. Please verify to continue.', 201);
+  // Seed initial data
+  const seedNewUser = require('../utils/seedNewUser');
+  await seedNewUser(user);
+
+  // Return success without OTP
+  return apiResponse.success(res, null, 'Registration successful! You can now login.', 201);
 });
 
 /**
@@ -93,9 +107,8 @@ const login = asyncHandler(async (req, res) => {
     return apiResponse.error(res, `Account exists but is registered as a ${user.role}. Please use the ${user.role} login portal.`, 403);
   }
 
-  if (!user.isVerified) {
-    return apiResponse.error(res, 'Please verify your email first', 401);
-  }
+  // Email verification check bypassed for seamless login
+  // if (!user.isVerified) { ... }
 
   const isMatch = await user.comparePassword(password);
   if (!isMatch) {

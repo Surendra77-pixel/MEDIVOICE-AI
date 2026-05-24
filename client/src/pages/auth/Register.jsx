@@ -34,8 +34,8 @@ const Register = () => {
     setLoading(true);
     try {
       await signup(formData);
-      toast.success('Registration successful! Please verify your email.');
-      navigate(ROUTES.PUBLIC.VERIFY_OTP, { state: { email: formData.email, role: formData.role } });
+      toast.success('Registration successful! You can now log in.');
+      navigate(ROUTES.PUBLIC.LOGIN);
     } catch (error) {
       toast.error(typeof error === 'string' ? error : (error.message || 'Registration failed'));
     } finally {
