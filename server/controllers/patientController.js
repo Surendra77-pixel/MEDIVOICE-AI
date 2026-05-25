@@ -453,10 +453,7 @@ Be thorough. Extract every single medication listed. If the handwriting is uncle
       const status = err?.status || (err?.message?.includes('503') ? 503 : 0);
       console.warn(`Model ${modelName} failed (${status}): ${err.message}`);
       lastError = err;
-      // Only retry on 503 (overloaded) or 429 (rate limit); fail fast on other errors
-      if (!err.message?.includes('503') && !err.message?.includes('429') && !err.message?.includes('overloaded') && !err.message?.includes('UNAVAILABLE')) {
-        break;
-      }
+      // Try next model on ANY error, including 404 (model not found), 503, 429, etc.
       // Small delay before next model
       await new Promise(r => setTimeout(r, 800));
     }
