@@ -360,7 +360,11 @@ const analyzePrescription = asyncHandler(async (req, res) => {
 
   // Convert uploaded buffer to base64 inline part
   const base64Image = req.file.buffer.toString('base64');
-  const mimeType = req.file.mimetype || 'image/jpeg';
+  let mimeType = req.file.mimetype || 'image/jpeg';
+  const supportedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/heic', 'image/heif'];
+  if (!supportedTypes.includes(mimeType)) {
+    mimeType = 'image/jpeg'; // Force unsupported image mimetypes to jpeg so Gemini doesn't reject them
+  }
 
   const prompt = `You are a medical AI assistant. Analyze this prescription image carefully.
 
