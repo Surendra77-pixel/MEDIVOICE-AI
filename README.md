@@ -1,4 +1,4 @@
-# MediVoice AI 🩺
+## MediVoice AI 🩺
 
 MediVoice AI is an advanced, AI-powered medical consultation platform designed to seamlessly connect doctors and patients, breaking down language barriers and automating clinical documentation. The platform provides a rich ecosystem for real-time translation, automated SOAP note generation, patient queue management, and comprehensive clinical analytics.
 
